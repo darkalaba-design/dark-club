@@ -28,6 +28,39 @@ body {
   }
 }
 
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .md-py-8 {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  .md-p-6 {
+    padding: 1.5rem;
+  }
+
+  .md-px-6 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .md-pb-6 {
+    padding-bottom: 1.5rem;
+  }
+
+  .md-text-xl {
+    font-size: 1.25rem;
+  }
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -290,6 +323,18 @@ html {
 
 .bg-blue-500-20 {
   background-color: rgba(59, 130, 246, 0.2);
+}
+
+.bg-blue-500\/20 {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.border-blue-500\/30 {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.border-blue-500-30 {
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 .bg-yellow-500-10 {
@@ -575,6 +620,10 @@ html {
 
 .-translate-y-1 {
   transform: translateY(-0.25rem);
+}
+
+.rotate-45 {
+  transform: rotate(45deg);
 }
 
 .grid {

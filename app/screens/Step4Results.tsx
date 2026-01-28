@@ -5,6 +5,7 @@ import TargetCard from '../components/TargetCard'
 import TechniqueCard from '../components/TechniqueCard'
 import TechniqueDetailModal from '../components/TechniqueDetailModal'
 import EthicsChecklist from '../components/EthicsChecklist'
+import Accordion from '../components/Accordion'
 import { manipulatorRoles } from '../data/roles'
 import { victimRoles } from '../data/roles'
 import { targetActions } from '../data/actions'
@@ -57,35 +58,35 @@ export default function Step4Results({
   return (
     <div>
       {/* Сводка */}
-      <div className="bg-dark-card border border-dark rounded-xl p-6 mb-8">
-        <h3 className="text-lg font-semibold mb-4 text-light flex items-center gap-2">
-          📊 Ваш сценарий:
-        </h3>
-        <div className="space-y-2 text-gray-300">
-          <div><strong className="text-light">Роль:</strong> {manipulator?.title || 'Не выбрано'}</div>
-          <div><strong className="text-light">Аудитория:</strong> {victim?.title || 'Не выбрано'}</div>
-          <div><strong className="text-light">Цель:</strong> {action?.title || 'Не выбрано'}</div>
+      <Accordion title="Ваш сценарий" icon="📊" defaultOpen={true}>
+        <div className="space-y-3 text-gray-300 pt-2">
+          <div className="flex items-start gap-2">
+            <strong className="text-light min-w-[80px]">Роль:</strong>
+            <span>{manipulator?.title || 'Не выбрано'}</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <strong className="text-light min-w-[80px]">Аудитория:</strong>
+            <span>{victim?.title || 'Не выбрано'}</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <strong className="text-light min-w-[80px]">Цель:</strong>
+            <span>{action?.title || 'Не выбрано'}</span>
+          </div>
         </div>
-      </div>
+      </Accordion>
 
       {/* Мишени */}
-      <div className="mb-12">
-        <h3 className="text-2xl font-bold mb-6 text-light flex items-center gap-2">
-          🎯 УЯЗВИМЫЕ МИШЕНИ
-        </h3>
-        <div className="grid grid-cols-1 lg-grid-cols-2 gap-4">
+      <Accordion title="Уязвимые мишени" icon="🎯" defaultOpen={true}>
+        <div className="grid grid-cols-1 gap-4 pt-2">
           {targets.map(target => (
             <TargetCard key={target.id} target={target} />
           ))}
         </div>
-      </div>
+      </Accordion>
 
       {/* Техники */}
-      <div className="mb-12">
-        <h3 className="text-2xl font-bold mb-6 text-light flex items-center gap-2">
-          🛠️ РЕКОМЕНДУЕМЫЕ ТЕХНИКИ
-        </h3>
-        <div className="grid grid-cols-1 lg-grid-cols-2 gap-4">
+      <Accordion title="Рекомендуемые техники" icon="🛠️" defaultOpen={true}>
+        <div className="grid grid-cols-1 gap-4 pt-2">
           {techniques.map(technique => (
             <TechniqueCard
               key={technique.id}
@@ -94,16 +95,18 @@ export default function Step4Results({
             />
           ))}
         </div>
-      </div>
+      </Accordion>
 
       {/* Этический чек-лист */}
-      <div className="mb-8">
-        <EthicsChecklist
-          checklist={ethicsChecklist}
-          onChange={onEthicsChange}
-          showWarning={showWarning}
-        />
-      </div>
+      <Accordion title="Этический чек-лист" icon="⚠️" defaultOpen={true}>
+        <div className="pt-2">
+          <EthicsChecklist
+            checklist={ethicsChecklist}
+            onChange={onEthicsChange}
+            showWarning={showWarning}
+          />
+        </div>
+      </Accordion>
 
       {/* Кнопки */}
       <div className="flex flex-col sm-flex-row gap-4 justify-between">

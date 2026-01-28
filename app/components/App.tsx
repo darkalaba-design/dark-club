@@ -6,6 +6,7 @@ import { getRecommendations } from '../data/matchingLogic'
 import { targets } from '../data/targets'
 import { techniques } from '../data/techniques'
 import StepIndicator from './StepIndicator'
+import Breadcrumbs from './Breadcrumbs'
 import WelcomeScreen from '../screens/WelcomeScreen'
 import Step1Manipulator from '../screens/Step1Manipulator'
 import Step2Victim from '../screens/Step2Victim'
@@ -52,6 +53,21 @@ export default function App() {
     nextStep()
   }
 
+  const handleRoleSelect = (roleId: string) => {
+    setManipulatorRole(roleId)
+    setTimeout(() => nextStep(), 300) // Небольшая задержка для плавности
+  }
+
+  const handleVictimSelect = (roleId: string) => {
+    setVictimRole(roleId)
+    setTimeout(() => nextStep(), 300)
+  }
+
+  const handleActionSelect = (actionId: string) => {
+    setTargetAction(actionId)
+    setTimeout(() => nextStep(), 300)
+  }
+
   const handleBack = () => {
     prevStep()
   }
@@ -68,7 +84,28 @@ export default function App() {
       {state.currentStep === 0 ? (
         <WelcomeScreen onStart={handleStart} />
       ) : (
-        <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto px-4 py-4 md-py-8">
+          {/* Кнопка назад и хлебные крошки */}
+          <div className="mb-6">
+            {state.currentStep > 1 && state.currentStep < 4 && (
+              <button
+                onClick={handleBack}
+                className="mb-4 flex items-center gap-2 text-gray-400 hover-text-light transition-colors text-sm"
+              >
+                <span>←</span>
+                <span>Назад</span>
+              </button>
+            )}
+            {state.currentStep <= 3 && (
+              <Breadcrumbs
+                manipulatorRole={state.manipulatorRole}
+                victimRole={state.victimRole}
+                targetAction={state.targetAction}
+                currentStep={state.currentStep}
+              />
+            )}
+          </div>
+
           {/* Индикатор прогресса */}
           {state.currentStep <= 3 && (
             <StepIndicator currentStep={state.currentStep} totalSteps={3} />
@@ -78,21 +115,21 @@ export default function App() {
           {state.currentStep === 1 && (
             <Step1Manipulator
               selectedRole={state.manipulatorRole}
-              onSelect={setManipulatorRole}
+              onSelect={handleRoleSelect}
             />
           )}
 
           {state.currentStep === 2 && (
             <Step2Victim
               selectedRole={state.victimRole}
-              onSelect={setVictimRole}
+              onSelect={handleVictimSelect}
             />
           )}
 
           {state.currentStep === 3 && (
             <Step3Action
               selectedAction={state.targetAction}
-              onSelect={setTargetAction}
+              onSelect={handleActionSelect}
             />
           )}
 
@@ -107,39 +144,6 @@ export default function App() {
               onEthicsChange={setEthicsChecklist}
               onReset={reset}
             />
-          )}
-
-          {/* Навигация */}
-          {state.currentStep > 0 && state.currentStep < 4 && (
-            <div className="flex justify-between mt-12 pt-8 border-t border-dark">
-              <button
-                onClick={handleBack}
-                disabled={state.currentStep === 1}
-                className={`
-                  px-6 py-3 rounded-lg font-medium transition-all
-                  ${state.currentStep === 1
-                    ? 'bg-dark-card-light text-gray-500 cursor-not-allowed opacity-50'
-                    : 'bg-dark-card-light hover-bg-dark-hover text-light border border-dark'
-                  }
-                `}
-              >
-                ← Назад
-              </button>
-
-              <button
-                onClick={handleNext}
-                disabled={!canProceed()}
-                className={`
-                  px-8 py-3 rounded-lg font-semibold transition-all
-                  ${canProceed()
-                    ? 'bg-blue-500 hover-bg-blue-600 text-white'
-                    : 'bg-dark-card-light text-gray-500 cursor-not-allowed opacity-50'
-                  }
-                `}
-              >
-                Далее →
-              </button>
-            </div>
           )}
         </div>
       )}
