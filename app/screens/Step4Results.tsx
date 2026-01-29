@@ -122,7 +122,7 @@ export default function Step4Results({
       <div className="flex flex-col sm-flex-row gap-4">
         <button
           onClick={handleReset}
-          className="px-6 py-3 bg-dark-card-light hover-bg-dark-hover text-light rounded-lg font-medium transition-colors border border-dark"
+          className="px-6 py-3 bg-dark-card-light hover-bg-dark-hover text-light rounded-lg font-medium transition-colors"
         >
           Начать заново
         </button>

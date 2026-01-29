@@ -45,6 +45,12 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
     }
   }, [savedVisible])
 
+  const handleUpdate = useCallback((patch: Partial<Profile>) => {
+    if (!profileId) return
+    updateProfile(profileId, patch)
+    showSaved()
+  }, [profileId, updateProfile, showSaved])
+
   if (!profile) {
     return (
       <div className="max-w-2xl mx-auto py-8">
@@ -60,11 +66,6 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
   const psychotype = profile.psychotype ? psychotypes.find(p => p.id === profile.psychotype!) ?? null : null
   const profileComplexes = profile.complexes.map(id => complexes.find(c => c.id === id)).filter(Boolean) as Complex[]
   const profileShadows = profile.shadows.map(id => shadows.find(s => s.id === id)).filter(Boolean) as Shadow[]
-
-  const handleUpdate = useCallback((patch: Partial<Profile>) => {
-    updateProfile(profileId, patch)
-    showSaved()
-  }, [profileId, updateProfile, showSaved])
 
   const handleDelete = () => {
     if (window.confirm(`Удалить профиль «${profile.name}»?`)) {
@@ -118,12 +119,12 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
       <div className="bg-dark-card border border-dark rounded-xl p-6 mb-6">
         <div className="flex items-start gap-4">
           <span className="text-5xl flex-shrink-0">{profile.avatar}</span>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 flex flex-col gap-2">
             <h1 className="text-2xl font-bold text-light">{profile.name}</h1>
-            <span className="inline-block mt-1 px-2 py-0.5 rounded text-sm bg-dark-bg text-gray-400">
+            <span className="inline-block px-2 py-0.5 rounded text-sm text-gray-400">
               {relationshipTypeLabels[profile.relationshipType] ?? profile.relationshipType}
             </span>
-            <div className="flex gap-2 mt-3">
+            <div className="flex gap-2">
               <button
                 onClick={() => setModal('edit')}
                 className="text-sm text-gray-400 hover-text-light transition-colors"
@@ -145,7 +146,7 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
         {/* Progress */}
         <div className="mt-4 pt-4 border-t border-dark">
           <p className="text-sm text-gray-400 mb-1">Профиль заполнен на {completeness}%</p>
-          <div className="h-2 rounded-full bg-dark-bg overflow-hidden">
+          <div className="mt-2 h-2 rounded-full bg-dark-bg overflow-hidden">
             <div
               className="h-full rounded-full bg-blue-500 transition-all"
               style={{ width: `${completeness}%` }}
@@ -544,7 +545,7 @@ function EditProfileModal({
             </select>
           </div>
           <div className="flex gap-3 pt-4">
-            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg border border-dark text-gray-400 hover-text-light">
+            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-gray-400 hover-text-light">
               Отмена
             </button>
             <button type="submit" disabled={!name.trim()} className="flex-1 py-2 rounded-lg bg-blue-500 text-white font-medium disabled-opacity-50">
@@ -576,17 +577,17 @@ function PsychotypeSelectModal({
               key={p.id}
               type="button"
               onClick={() => onSelect(p.id)}
-              className="text-left p-3 rounded-lg border border-dark bg-dark-bg hover-bg-dark-hover transition-colors flex items-center gap-3"
+              className="text-left p-4 rounded-lg border border-dark bg-dark-bg hover-bg-dark-hover transition-colors flex items-center gap-3"
             >
               <span className="text-2xl">{p.icon}</span>
-              <div>
-                <h4 className="font-medium text-light">{p.title}</h4>
-                <p className="text-sm text-gray-400">{p.shortDesc}</p>
+              <div className="flex flex-col gap-1">
+                <h4 className="text-base font-medium text-light">{p.title}</h4>
+                <p className="text-xs text-gray-400">{p.shortDesc}</p>
               </div>
             </button>
           ))}
         </div>
-        <button type="button" onClick={onClose} className="mt-4 w-full py-2 rounded-lg border border-dark text-gray-400 hover-text-light">
+        <button type="button" onClick={onClose} className="mt-4 w-full py-2 rounded-lg text-gray-400 hover-text-light">
           Отмена
         </button>
       </div>
@@ -627,7 +628,7 @@ function ComplexSelectModal({
             )
           })}
         </div>
-        <button type="button" onClick={onClose} className="mt-4 w-full py-2 rounded-lg border border-dark text-gray-400 hover-text-light">
+        <button type="button" onClick={onClose} className="mt-4 w-full py-2 rounded-lg text-gray-400 hover-text-light">
           Готово
         </button>
       </div>
@@ -668,7 +669,7 @@ function ShadowSelectModal({
             )
           })}
         </div>
-        <button type="button" onClick={onClose} className="mt-4 w-full py-2 rounded-lg border border-dark text-gray-400 hover-text-light">
+        <button type="button" onClick={onClose} className="mt-4 w-full py-2 rounded-lg text-gray-400 hover-text-light">
           Готово
         </button>
       </div>
@@ -712,7 +713,7 @@ function BeliefModal({
           ))}
         </div>
         <div className="flex gap-3">
-          <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg border border-dark text-gray-400 hover-text-light">
+          <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-gray-400 hover-text-light">
             Отмена
           </button>
           <button
@@ -765,7 +766,7 @@ function ValueModal({
           ))}
         </div>
         <div className="flex gap-3">
-          <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg border border-dark text-gray-400 hover-text-light">
+          <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-gray-400 hover-text-light">
             Отмена
           </button>
           <button

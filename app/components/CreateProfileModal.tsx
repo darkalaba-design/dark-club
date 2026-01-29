@@ -76,7 +76,7 @@ export default function CreateProfileModal({ onClose, onCreate }: CreateProfileM
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 rounded-lg border border-dark text-gray-400 hover-text-light transition-colors"
+              className="flex-1 py-2 rounded-lg text-gray-400 hover-text-light transition-colors"
             >
               Отмена
             </button>

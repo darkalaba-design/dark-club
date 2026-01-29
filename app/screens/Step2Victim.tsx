@@ -169,7 +169,7 @@ export default function Step2Victim({
             <button
               type="button"
               onClick={() => setShowProfileModal(false)}
-              className="mt-4 w-full py-2 rounded-lg border border-dark text-gray-400 hover-text-light"
+              className="mt-4 w-full py-2 rounded-lg text-gray-400 hover-text-light"
             >
               Отмена
             </button>

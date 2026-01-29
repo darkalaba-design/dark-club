@@ -16,7 +16,7 @@ export default function Accordion({ title, icon, children, defaultOpen = false }
     <div className="bg-dark-card border border-dark rounded-xl overflow-hidden mb-4">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 md-p-6 text-left hover-bg-dark-hover transition-colors"
+        className={`w-full flex items-center justify-between p-4 md-p-6 text-left hover-bg-dark-hover transition-colors rounded-t-xl ${!isOpen ? 'rounded-b-xl' : ''}`}
       >
         <div className="flex items-center gap-3">
           {icon && <span className="text-2xl">{icon}</span>}
@@ -26,10 +26,7 @@ export default function Accordion({ title, icon, children, defaultOpen = false }
           <div
             className={`
               w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
-              ${isOpen
-                ? 'border-blue-500 bg-blue-500-20'
-                : 'border-gray-600 bg-dark-bg'
-              }
+              ${isOpen ? 'border-blue-500' : 'border-gray-600'}
             `}
           >
             <span
@@ -44,7 +41,7 @@ export default function Accordion({ title, icon, children, defaultOpen = false }
         </div>
       </button>
       {isOpen && (
-        <div className="px-4 md-px-6 pb-4 md-pb-6 border-t border-dark">
+        <div className="px-4 md-px-6 pt-4 md-pt-6 pb-4 md-pb-6 border-t border-dark">
           {children}
         </div>
       )}
