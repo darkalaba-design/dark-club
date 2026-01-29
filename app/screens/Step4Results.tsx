@@ -2,15 +2,17 @@
 
 import { useState } from 'react'
 import TargetCard from '../components/TargetCard'
+import ProfileTargetCard from '../components/ProfileTargetCard'
 import TechniqueCard from '../components/TechniqueCard'
 import TechniqueDetailModal from '../components/TechniqueDetailModal'
-import EthicsChecklist from '../components/EthicsChecklist'
 import Accordion from '../components/Accordion'
-import { manipulatorRoles } from '../data/roles'
-import { victimRoles } from '../data/roles'
-import { targetActions } from '../data/actions'
+import { useAppData } from '../hooks/useAppData'
 import { Technique } from '../data/techniques'
 import { Target } from '../data/targets'
+import type { Profile } from '../data/profiles'
+import { relationshipTypeLabels } from '../data/profiles'
+import { psychotypes } from '../data/psychotypes'
+import type { ProfileTargetItem } from '../data/matchingLogic'
 
 interface Step4ResultsProps {
   manipulatorRole: string | null
@@ -18,12 +20,8 @@ interface Step4ResultsProps {
   targetAction: string | null
   targets: Target[]
   techniques: Technique[]
-  ethicsChecklist: {
-    noHarm: boolean
-    openDialogue: boolean
-    trustPreserved: boolean
-  }
-  onEthicsChange: (checklist: Partial<Step4ResultsProps['ethicsChecklist']>) => void
+  profileTargets?: ProfileTargetItem[]
+  selectedProfile?: Profile
   onReset: () => void
 }
 
@@ -33,26 +31,24 @@ export default function Step4Results({
   targetAction,
   targets,
   techniques,
-  ethicsChecklist,
-  onEthicsChange,
+  profileTargets = [],
+  selectedProfile,
   onReset
 }: Step4ResultsProps) {
   const [selectedTechnique, setSelectedTechnique] = useState<Technique | null>(null)
-  const [showWarning, setShowWarning] = useState(false)
+  const appData = useAppData()
 
-  const manipulator = manipulatorRoles.find(r => r.id === manipulatorRole)
-  const victim = victimRoles.find(r => r.id === victimRole)
-  const action = targetActions.find(a => a.id === targetAction)
+  const manipulator = appData.manipulatorRoles.find(r => r.id === manipulatorRole)
+  const victim = appData.victimRoles.find(r => r.id === victimRole)
+  const action = appData.targetActions.find(a => a.id === targetAction)
+  const psychotype = selectedProfile?.psychotype
+    ? psychotypes.find(p => p.id === selectedProfile.psychotype)
+    : null
 
   const handleReset = () => {
     if (window.confirm('Вы уверены, что хотите начать заново?')) {
       onReset()
     }
-  }
-
-  const handleSavePDF = () => {
-    // Заглушка
-    alert('Экспорт в PDF будет доступен в следующей версии')
   }
 
   return (
@@ -66,8 +62,18 @@ export default function Step4Results({
           </div>
           <div className="flex items-start gap-2">
             <strong className="text-light min-w-[80px]">Аудитория:</strong>
-            <span>{victim?.title || 'Не выбрано'}</span>
+            <span>
+              {selectedProfile
+                ? `${selectedProfile.name} (${relationshipTypeLabels[selectedProfile.relationshipType] ?? selectedProfile.relationshipType})`
+                : victim?.title || 'Не выбрано'}
+            </span>
           </div>
+          {selectedProfile && psychotype && (
+            <div className="flex items-start gap-2">
+              <strong className="text-light min-w-[80px]">Психотип:</strong>
+              <span>{psychotype.title} {psychotype.icon}</span>
+            </div>
+          )}
           <div className="flex items-start gap-2">
             <strong className="text-light min-w-[80px]">Цель:</strong>
             <span>{action?.title || 'Не выбрано'}</span>
@@ -75,11 +81,18 @@ export default function Step4Results({
         </div>
       </Accordion>
 
-      {/* Мишени */}
+      {/* Мишени: базовые + из профиля */}
       <Accordion title="Уязвимые мишени" icon="🎯" defaultOpen={true}>
         <div className="grid grid-cols-1 gap-4 pt-2">
           {targets.map(target => (
             <TargetCard key={target.id} target={target} />
+          ))}
+          {selectedProfile && profileTargets.length > 0 && profileTargets.map(item => (
+            <ProfileTargetCard
+              key={item.id}
+              item={item}
+              profileName={selectedProfile.name}
+            />
           ))}
         </div>
       </Accordion>
@@ -94,35 +107,24 @@ export default function Step4Results({
               onClick={() => setSelectedTechnique(technique)}
             />
           ))}
-        </div>
-      </Accordion>
-
-      {/* Этический чек-лист */}
-      <Accordion title="Этический чек-лист" icon="⚠️" defaultOpen={true}>
-        <div className="pt-2">
-          <EthicsChecklist
-            checklist={ethicsChecklist}
-            onChange={onEthicsChange}
-            showWarning={showWarning}
-          />
+          {selectedProfile && psychotype && (
+            <div className="bg-dark-card border border-dark rounded-xl p-5" style={{ borderLeft: '4px solid #8b5cf6' }}>
+              <div className="text-xs font-semibold text-purple-400 mb-1">
+                💼 Особенности для {selectedProfile.name} ({psychotype.title})
+              </div>
+              <p className="text-sm text-gray-300">{psychotype.communication}</p>
+            </div>
+          )}
         </div>
       </Accordion>
 
       {/* Кнопки */}
-      <div className="flex flex-col sm-flex-row gap-4 justify-between">
+      <div className="flex flex-col sm-flex-row gap-4">
         <button
           onClick={handleReset}
           className="px-6 py-3 bg-dark-card-light hover-bg-dark-hover text-light rounded-lg font-medium transition-colors border border-dark"
         >
           Начать заново
-        </button>
-        <button
-          onClick={handleSavePDF}
-          disabled
-          className="px-6 py-3 bg-dark-card-light text-gray-500 rounded-lg font-medium cursor-not-allowed opacity-50 border border-dark"
-          title="Скоро"
-        >
-          Сохранить в PDF
         </button>
       </div>
 

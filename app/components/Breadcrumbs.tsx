@@ -1,29 +1,34 @@
 'use client'
 
-import { manipulatorRoles } from '../data/roles'
-import { victimRoles } from '../data/roles'
-import { targetActions } from '../data/actions'
+import { useAppData } from '../hooks/useAppData'
+import type { Profile } from '../data/profiles'
 
 interface BreadcrumbsProps {
   manipulatorRole: string | null
   victimRole: string | null
   targetAction: string | null
   currentStep: number
+  selectedProfile?: Profile
 }
 
 export default function Breadcrumbs({
   manipulatorRole,
   victimRole,
   targetAction,
-  currentStep
+  currentStep,
+  selectedProfile
 }: BreadcrumbsProps) {
-  const manipulator = manipulatorRoles.find(r => r.id === manipulatorRole)
-  const victim = victimRoles.find(r => r.id === victimRole)
-  const action = targetActions.find(a => a.id === targetAction)
+  const appData = useAppData()
+  const manipulator = appData.manipulatorRoles.find(r => r.id === manipulatorRole)
+  const victim = appData.victimRoles.find(r => r.id === victimRole)
+  const action = appData.targetActions.find(a => a.id === targetAction)
+
+  const audienceValue = selectedProfile ? selectedProfile.name : victim?.title
+  const audienceIcon = selectedProfile ? selectedProfile.avatar : victim?.icon
 
   const steps = [
     { num: 1, label: 'Роль', value: manipulator?.title, icon: manipulator?.icon },
-    { num: 2, label: 'Аудитория', value: victim?.title, icon: victim?.icon },
+    { num: 2, label: 'Аудитория', value: audienceValue, icon: audienceIcon },
     { num: 3, label: 'Цель', value: action?.title, icon: action?.icon }
   ]
 

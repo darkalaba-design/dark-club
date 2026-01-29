@@ -3,41 +3,41 @@
 import { useState, useCallback } from 'react'
 import { Target } from '../data/targets'
 import { Technique } from '../data/techniques'
+import type { ProfileTargetItem } from '../data/matchingLogic'
+
+export type MainSection = 'analysis' | 'profiles'
 
 export interface AppState {
   currentStep: number // 0 = welcome, 1-3 = steps, 4 = results
   selectedMode: 'communication' | 'marketing' | 'defense'
+  mainSection: MainSection
   manipulatorRole: string | null
   victimRole: string | null
   targetAction: string | null
+  selectedProfileId: string | null // выбранный профиль на шаге 2 (аудитория)
   selectedTechnique: string | null
   results: {
     targets: Target[]
     techniques: Technique[]
+    profileTargets?: ProfileTargetItem[]
   }
-  ethicsChecklist: {
-    noHarm: boolean
-    openDialogue: boolean
-    trustPreserved: boolean
-  }
+  profileDetailId: string | null // ID профиля на экране детального просмотра
 }
 
 const initialState: AppState = {
   currentStep: 0,
   selectedMode: 'communication',
+  mainSection: 'analysis',
   manipulatorRole: null,
   victimRole: null,
   targetAction: null,
+  selectedProfileId: null,
   selectedTechnique: null,
   results: {
     targets: [],
     techniques: []
   },
-  ethicsChecklist: {
-    noHarm: false,
-    openDialogue: false,
-    trustPreserved: false
-  }
+  profileDetailId: null
 }
 
 export function useAppState() {
@@ -59,6 +59,18 @@ export function useAppState() {
     setState(prev => ({ ...prev, victimRole: role }))
   }, [])
 
+  const setSelectedProfileId = useCallback((id: string | null) => {
+    setState(prev => ({ ...prev, selectedProfileId: id }))
+  }, [])
+
+  const setMainSection = useCallback((section: MainSection) => {
+    setState(prev => ({ ...prev, mainSection: section }))
+  }, [])
+
+  const setProfileDetailId = useCallback((id: string | null) => {
+    setState(prev => ({ ...prev, profileDetailId: id }))
+  }, [])
+
   const setTargetAction = useCallback((action: string | null) => {
     setState(prev => ({ ...prev, targetAction: action }))
   }, [])
@@ -67,15 +79,8 @@ export function useAppState() {
     setState(prev => ({ ...prev, selectedTechnique: technique }))
   }, [])
 
-  const setResults = useCallback((results: { targets: Target[], techniques: Technique[] }) => {
+  const setResults = useCallback((results: { targets: Target[], techniques: Technique[], profileTargets?: ProfileTargetItem[] }) => {
     setState(prev => ({ ...prev, results }))
-  }, [])
-
-  const setEthicsChecklist = useCallback((checklist: Partial<AppState['ethicsChecklist']>) => {
-    setState(prev => ({
-      ...prev,
-      ethicsChecklist: { ...prev.ethicsChecklist, ...checklist }
-    }))
   }, [])
 
   const reset = useCallback(() => {
@@ -93,9 +98,11 @@ export function useAppState() {
     setManipulatorRole,
     setVictimRole,
     setTargetAction,
+    setSelectedProfileId,
+    setMainSection,
+    setProfileDetailId,
     setSelectedTechnique,
     setResults,
-    setEthicsChecklist,
     reset,
     goToStep
   }

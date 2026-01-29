@@ -1,9 +1,18 @@
 import { Target } from './targets'
 import { Technique } from './techniques'
+import type { Profile } from './profiles'
+import { relationshipTypeToVictimRoleId } from './profiles'
+import type { Complex } from './complexes'
+import type { Shadow } from './shadows'
+import { complexes } from './complexes'
+import { shadows } from './shadows'
+
+export type ProfileTargetItem = Complex | Shadow
 
 export interface MatchingResult {
   targets: Target[]
   techniques: Technique[]
+  profileTargets?: ProfileTargetItem[]
 }
 
 export const matchingLogic: Record<string, { targets: string[], techniques: string[] }> = {
@@ -46,10 +55,13 @@ export function getRecommendations(
   victimRole: string | null,
   targetAction: string | null,
   allTargets: Target[],
-  allTechniques: Technique[]
+  allTechniques: Technique[],
+  customMatchingLogic?: Record<string, { targets: string[], techniques: string[] }>
 ): MatchingResult {
+  const logic = customMatchingLogic || matchingLogic
+
   if (!manipulatorRole || !victimRole || !targetAction) {
-    const defaultMatch = matchingLogic['default']
+    const defaultMatch = logic['default']
     return {
       targets: defaultMatch.targets.map(id => allTargets.find(t => t.id === id)!).filter(Boolean),
       techniques: defaultMatch.techniques.map(id => allTechniques.find(t => t.id === id)!).filter(Boolean)
@@ -57,7 +69,7 @@ export function getRecommendations(
   }
 
   const key = `${manipulatorRole}_${victimRole}_${targetAction}`
-  const match = matchingLogic[key] || matchingLogic['default']
+  const match = logic[key] || logic['default']
 
   const selectedTargets = match.targets
     .map(id => allTargets.find(t => t.id === id))
@@ -70,5 +82,35 @@ export function getRecommendations(
   return {
     targets: selectedTargets,
     techniques: selectedTechniques
+  }
+}
+
+/**
+ * Рекомендации с учётом профиля: базовые мишени/техники + мишени из комплексов и теней профиля.
+ */
+export function getRecommendationsForProfile(
+  manipulatorRole: string | null,
+  profile: Profile,
+  targetAction: string | null,
+  allTargets: Target[],
+  allTechniques: Technique[]
+): MatchingResult {
+  const victimRole = relationshipTypeToVictimRoleId[profile.relationshipType] ?? 'stranger'
+  const base = getRecommendations(manipulatorRole, victimRole, targetAction, allTargets, allTechniques)
+
+  const profileTargets: ProfileTargetItem[] = []
+  for (const id of profile.complexes) {
+    const item = complexes.find(c => c.id === id)
+    if (item) profileTargets.push(item)
+  }
+  for (const id of profile.shadows) {
+    const item = shadows.find(s => s.id === id)
+    if (item) profileTargets.push(item)
+  }
+
+  return {
+    targets: base.targets,
+    techniques: base.techniques,
+    profileTargets
   }
 }
