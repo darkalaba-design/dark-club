@@ -137,7 +137,7 @@ export default function App() {
 
       {/* Раздел Профили */}
       {state.mainSection === 'profiles' && (
-        <div className="max-w-6xl mx-auto px-4 py-4 md-py-8">
+        <div className="max-w-6xl mx-auto py-4 md-py-8">
           {state.profileDetailId ? (
             <ProfileDetailScreen
               profileId={state.profileDetailId}
@@ -158,7 +158,7 @@ export default function App() {
           {state.currentStep === 0 ? (
             <WelcomeScreen onStart={handleStart} />
           ) : (
-            <div className="max-w-6xl mx-auto px-4 py-4 md-py-8">
+            <div className="max-w-6xl mx-auto py-4 md-py-8">
               <div className="mb-6">
                 {state.currentStep > 1 && state.currentStep < 4 && (
                   <button

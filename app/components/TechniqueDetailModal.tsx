@@ -35,17 +35,13 @@ export default function TechniqueDetailModal({ technique, onClose }: TechniqueDe
     .map(id => targets.find(t => t.id === id))
     .filter((t): t is Target => t !== undefined)
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-  }
-
   return (
     <div
-      className="fixed inset-0 bg-black-70 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black-70 flex items-center justify-center z-50"
       onClick={onClose}
     >
       <div
-        className="bg-dark-bg border border-dark rounded-xl max-w-3xl w-full max-h-90vh overflow-y-auto"
+        className="bg-dark-bg border-0 w-full h-full min-h-screen overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
@@ -63,7 +59,7 @@ export default function TechniqueDetailModal({ technique, onClose }: TechniqueDe
             <h3 className="text-lg font-semibold mb-3 text-light flex items-center gap-2">
               🧠 Как это работает
             </h3>
-            <p className="text-gray-300 leading-relaxed">{technique.howItWorks}</p>
+            <p className="text-sm text-gray-300 leading-relaxed">{technique.howItWorks}</p>
           </div>
 
           {/* На какие мишени бьёт */}
@@ -75,7 +71,7 @@ export default function TechniqueDetailModal({ technique, onClose }: TechniqueDe
               {relatedTargets.map(target => (
                 <div
                   key={target.id}
-                  className="flex items-center gap-2 bg-dark-card border border-dark rounded-lg px-3 py-2"
+                  className="flex items-center gap-2 bg-dark-card border border-dark rounded-lg px-4 py-2"
                 >
                   <span>{target.icon}</span>
                   <span className="text-sm text-gray-300">{target.title}</span>
@@ -93,16 +89,9 @@ export default function TechniqueDetailModal({ technique, onClose }: TechniqueDe
               {technique.templates.map((template, index) => (
                 <div
                   key={index}
-                  className="bg-dark-card border border-dark rounded-lg p-4 flex items-start justify-between gap-4 group hover-border-dark-hover transition-all"
+                  className="bg-dark-card border border-dark rounded-lg p-4 flex items-start gap-4 group hover-border-dark-hover transition-all"
                 >
-                  <p className="text-gray-300 italic flex-1">{template}</p>
-                  <button
-                    onClick={() => copyToClipboard(template)}
-                    className="text-xs text-gray-500 hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Копировать"
-                  >
-                    📋
-                  </button>
+                  <p className="text-sm text-gray-300 italic flex-1">{template}</p>
                 </div>
               ))}
             </div>
@@ -117,20 +106,12 @@ export default function TechniqueDetailModal({ technique, onClose }: TechniqueDe
               {technique.expectedEmotions.map((emotion, index) => (
                 <span
                   key={index}
-                  className="bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-full px-3 py-1 text-sm"
+                  className="text-blue-300 border border-blue-500/30 rounded-full px-3 py-1 text-sm"
                 >
                   {emotion}
                 </span>
               ))}
             </div>
-          </div>
-
-          {/* Этика */}
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-2 text-yellow-400 flex items-center gap-2">
-              ⚠️ Этика
-            </h3>
-            <p className="text-gray-300 leading-relaxed">{technique.ethicsNote}</p>
           </div>
 
           {/* Кнопка закрыть */}

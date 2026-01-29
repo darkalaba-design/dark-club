@@ -24,19 +24,19 @@ export default function ProfileCard({ profile, onClick }: ProfileCardProps) {
     >
       <div className="flex items-start gap-4">
         <span className="text-4xl flex-shrink-0">{profile.avatar}</span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 flex flex-col gap-2">
           <h3 className="text-lg font-semibold text-light truncate">{profile.name}</h3>
-          <span className="inline-block mt-1 px-2 py-0.5 rounded text-xs bg-dark-bg text-gray-400">
+          <span className="inline-block px-2 py-0.5 rounded text-xs text-gray-400">
             {relationLabel}
           </span>
-          <div className="mt-2 h-1.5 rounded-full bg-dark-bg overflow-hidden">
+          <div className="h-1.5 rounded-full bg-dark-bg overflow-hidden">
             <div
               className="h-full rounded-full bg-blue-500 transition-all"
               style={{ width: `${completeness}%` }}
             />
           </div>
           {lastUsed && (
-            <p className="mt-1 text-xs text-gray-500">Использован: {lastUsed}</p>
+            <p className="text-xs text-gray-500">Использован: {lastUsed}</p>
           )}
         </div>
       </div>
