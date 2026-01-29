@@ -9,14 +9,17 @@ interface WelcomeScreenProps {
 export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4 pt-6">
-      <div className="mb-6 relative w-[140px] h-[140px] flex flex-wrap">
+      <div
+        className="mt-6 mb-0 relative flex items-center justify-center overflow-hidden"
+        style={{ width: 140, height: 140, minWidth: 0, minHeight: 0, maxWidth: 140, maxHeight: 140, flexShrink: 0, flexGrow: 0, boxSizing: 'border-box' }}
+      >
         <Image
           src="/logo.svg"
           alt="Dark Club"
           width={100}
           height={100}
-          className="object-contain"
-          style={{ position: 'static', display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}
+          className="object-contain pb-6"
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
           priority
         />
       </div>

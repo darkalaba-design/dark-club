@@ -110,7 +110,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
           <button
             type="button"
-            style={{ backgroundColor: 'unset', background: 'unset' }}
+            style={{ backgroundColor: 'unset', background: 'unset', border: 'none', borderWidth: 0, borderColor: 'transparent', borderStyle: 'none', borderImage: 'none' }}
             onClick={() => { setMainSection('analysis'); goToStep(0) }}
             className={`bg-transparent border-0 border-none border-transparent text-sm font-medium transition-colors ${state.mainSection === 'analysis' && state.currentStep === 0 ? 'text-blue-400' : 'text-gray-400 hover-text-light'}`}
           >
@@ -118,7 +118,7 @@ export default function App() {
           </button>
           <button
             type="button"
-            style={{ backgroundColor: 'unset', background: 'unset' }}
+            style={{ backgroundColor: 'unset', background: 'unset', border: 'none', borderWidth: 0, borderColor: 'transparent', borderStyle: 'none', borderImage: 'none' }}
             onClick={() => { setMainSection('analysis'); goToStep(1) }}
             className={`bg-transparent border-0 border-none border-transparent text-sm font-medium transition-colors ${state.mainSection === 'analysis' && state.currentStep > 0 ? 'text-blue-400' : 'text-gray-400 hover-text-light'}`}
           >
@@ -126,7 +126,7 @@ export default function App() {
           </button>
           <button
             type="button"
-            style={{ backgroundColor: 'unset', background: 'unset' }}
+            style={{ backgroundColor: 'unset', background: 'unset', border: 'none', borderWidth: 0, borderColor: 'transparent', borderStyle: 'none', borderImage: 'none' }}
             onClick={() => { setMainSection('profiles'); setProfileDetailId(null) }}
             className={`bg-transparent border-0 border-none border-transparent text-sm font-medium transition-colors ${state.mainSection === 'profiles' ? 'text-blue-400' : 'text-gray-400 hover-text-light'}`}
           >
