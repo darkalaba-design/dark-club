@@ -30,12 +30,10 @@ export default function Accordion({ title, icon, children, defaultOpen = false }
             `}
           >
             <span
-              className={`
-                text-lg transition-transform duration-200 text-gray-400
-                ${isOpen ? 'rotate-45 text-blue-400' : ''}
-              `}
+              className={`text-lg transition-colors duration-200 ${isOpen ? 'text-blue-400' : 'text-gray-400'}`}
+              aria-hidden
             >
-              ✕
+              {isOpen ? '▲' : '▼'}
             </span>
           </div>
         </div>
