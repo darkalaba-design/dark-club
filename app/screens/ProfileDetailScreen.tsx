@@ -259,8 +259,8 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
         ) : (
           <div className="space-y-2">
             {profile.beliefs.map((b, i) => (
-              <div key={i} className="flex items-center justify-between gap-2 py-2 border-b border-dark last-border-b-0">
-                <span className="text-light">{b}</span>
+              <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
+                <span className="text-gray-400">{b}</span>
                 <button
                   onClick={() => handleUpdate({ beliefs: profile.beliefs.filter((_, j) => j !== i) })}
                   className="text-gray-500 hover-text-red-400 text-lg leading-none"
@@ -270,9 +270,11 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
                 </button>
               </div>
             ))}
-            <button onClick={() => setModal('belief')} className="text-sm text-blue-400 hover-underline">
-              + Добавить убеждение
-            </button>
+            <div className="pt-4">
+              <button onClick={() => setModal('belief')} className="text-sm text-blue-400 hover-underline">
+                + Добавить убеждение
+              </button>
+            </div>
           </div>
         )}
       </Accordion>
@@ -299,16 +301,18 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
                 {v}
                 <button
                   onClick={() => handleUpdate({ values: profile.values.filter((_, j) => j !== i) })}
-                  className="text-gray-500 hover-text-red-400 text-sm leading-none"
+                  className="ml-2 text-gray-500 hover-text-red-400 text-sm leading-none"
                   aria-label="Удалить"
                 >
                   ×
                 </button>
               </span>
             ))}
-            <button onClick={() => setModal('value')} className="text-sm text-blue-400 hover-underline">
-              + Добавить ценность
-            </button>
+            <div className="pt-4 w-full">
+              <button onClick={() => setModal('value')} className="text-sm text-blue-400 hover-underline">
+                + Добавить ценность
+              </button>
+            </div>
           </div>
         )}
       </Accordion>
@@ -398,8 +402,14 @@ function PsychotypeCard({
 }) {
   const [expanded, setExpanded] = useState(false)
   return (
-    <div className="border border-blue-500-30 rounded-xl p-4 bg-dark-bg">
-      <div className="flex items-start justify-between gap-2">
+    <div className="border border-blue-500-30 rounded-xl p-4 bg-dark-bg flex flex-col gap-3">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onChange}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onChange() } }}
+        className="flex items-start justify-between gap-2 cursor-pointer"
+      >
         <div className="flex items-center gap-2">
           <span className="text-2xl">{psychotype.icon}</span>
           <div>
@@ -407,17 +417,26 @@ function PsychotypeCard({
             <p className="text-sm text-gray-400">{psychotype.shortDesc}</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button onClick={onChange} className="text-sm text-blue-400 hover-underline">Изменить</button>
-          <button onClick={onRemove} className="text-sm text-gray-500 hover-text-red-400">×</button>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400 text-lg" aria-hidden>✏️</span>
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); onRemove() }}
+            className="text-sm text-gray-500 hover-text-red-400"
+            aria-label="Удалить"
+          >
+            ×
+          </button>
         </div>
       </div>
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="mt-2 text-sm text-gray-400 hover-text-light"
-      >
-        {expanded ? 'Свернуть' : 'Подробнее'}
-      </button>
+      <div className="flex justify-center">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-sm text-gray-400 hover-text-light"
+        >
+          {expanded ? 'Свернуть' : 'Подробнее'}
+        </button>
+      </div>
       {expanded && (
         <div className="mt-3 pt-3 border-t border-dark text-sm text-gray-300 space-y-2">
           <p>{psychotype.fullDesc}</p>
@@ -434,22 +453,22 @@ function PsychotypeCard({
 function ExpandableComplexCard({ complex, onRemove }: { complex: Complex; onRemove: () => void }) {
   const [expanded, setExpanded] = useState(false)
   return (
-    <div className="border border-dark rounded-xl p-3 bg-dark-bg">
+    <div className="border border-dark rounded-xl p-4 bg-dark-bg flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="text-xl">{complex.icon}</span>
-          <div>
+          <div className="flex flex-col gap-1">
             <h4 className="font-medium text-light">{complex.title}</h4>
             <p className="text-sm text-gray-400">{complex.description}</p>
           </div>
         </div>
         <button onClick={onRemove} className="text-gray-500 hover-text-red-400 text-lg">×</button>
       </div>
-      <button onClick={() => setExpanded(!expanded)} className="mt-2 text-sm text-gray-400 hover-text-light">
+      <button onClick={() => setExpanded(!expanded)} className="text-sm text-gray-400 hover-text-light">
         {expanded ? 'Свернуть' : 'Подробнее'}
       </button>
       {expanded && (
-        <div className="mt-2 pt-2 border-t border-dark text-sm text-gray-300 space-y-1">
+        <div className="mt-2 pt-2 border-t border-dark text-sm text-gray-300 flex flex-col gap-2">
           <p><strong className="text-light">Проявления:</strong> {complex.manifestations.join(', ')}</p>
           <p><strong className="text-light">Как использовать:</strong> {complex.howToUse}</p>
         </div>
@@ -461,22 +480,22 @@ function ExpandableComplexCard({ complex, onRemove }: { complex: Complex; onRemo
 function ExpandableShadowCard({ shadow, onRemove }: { shadow: Shadow; onRemove: () => void }) {
   const [expanded, setExpanded] = useState(false)
   return (
-    <div className="border border-gray-600 rounded-xl p-3 bg-dark-bg">
+    <div className="border border-gray-600 rounded-xl p-4 bg-dark-bg flex flex-col gap-4">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="text-xl">{shadow.icon}</span>
-          <div>
-            <h4 className="font-medium text-light">{shadow.title}</h4>
-            <p className="text-sm text-gray-400">{shadow.description}</p>
+          <div className="flex flex-col gap-1">
+            <h4 className="text-base font-medium text-light">{shadow.title}</h4>
+            <p className="text-sm text-gray-400" style={{ fontSize: '14px' }}>{shadow.description}</p>
           </div>
         </div>
         <button onClick={onRemove} className="text-gray-500 hover-text-red-400 text-lg">×</button>
       </div>
-      <button onClick={() => setExpanded(!expanded)} className="mt-2 text-sm text-gray-400 hover-text-light">
+      <button onClick={() => setExpanded(!expanded)} className="text-sm text-gray-400 hover-text-light">
         {expanded ? 'Свернуть' : 'Подробнее'}
       </button>
       {expanded && (
-        <div className="mt-2 pt-2 border-t border-dark text-sm text-gray-300 space-y-1">
+        <div className="mt-2 pt-2 border-t border-dark text-sm text-gray-300 flex flex-col gap-2">
           <p><strong className="text-light">Признаки:</strong> {shadow.signs.join(', ')}</p>
           <p><strong className="text-light">Как работать:</strong> {shadow.howToWork}</p>
         </div>
@@ -568,8 +587,8 @@ function PsychotypeSelectModal({
   onSelect: (id: string) => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black-70" onClick={onClose}>
-      <div className="bg-dark-card border border-dark rounded-xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-70" onClick={onClose}>
+      <div className="bg-dark-card border-0 w-full h-full min-h-screen overflow-y-auto p-6 shadow-xl" onClick={e => e.stopPropagation()}>
         <h2 className="text-xl font-semibold text-light mb-4">Выберите психотип</h2>
         <div className="grid grid-cols-1 gap-3">
           {psychotypes.map(p => (
@@ -605,8 +624,8 @@ function ComplexSelectModal({
   onToggle: (id: string) => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black-70" onClick={onClose}>
-      <div className="bg-dark-card border border-dark rounded-xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-70" onClick={onClose}>
+      <div className="bg-dark-card border-0 w-full h-full min-h-screen overflow-y-auto p-6 shadow-xl" onClick={e => e.stopPropagation()}>
         <h2 className="text-xl font-semibold text-light mb-4">Выберите комплекс</h2>
         <div className="grid grid-cols-1 gap-3">
           {complexes.map(c => {
@@ -616,12 +635,12 @@ function ComplexSelectModal({
                 key={c.id}
                 type="button"
                 onClick={() => onToggle(c.id)}
-                className={`text-left p-3 rounded-lg border flex items-center gap-3 transition-colors ${selected ? 'border-blue-500 bg-blue-500-20' : 'border-dark bg-dark-bg hover-bg-dark-hover'}`}
+                className={`text-left p-4 rounded-lg border flex items-center gap-3 transition-colors ${selected ? 'border-blue-500 bg-blue-500-20' : 'border-dark bg-dark-bg hover-bg-dark-hover'}`}
               >
                 <span className="text-2xl">{c.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-light">{c.title}</h4>
-                  <p className="text-sm text-gray-400 truncate">{c.description}</p>
+                <div className="flex-1 min-w-0 flex flex-col gap-1">
+                  <h4 className="text-base font-medium text-light">{c.title}</h4>
+                  <p className="text-xs text-gray-400 truncate">{c.description}</p>
                 </div>
                 {selected && <span className="text-green-400">✓</span>}
               </button>
@@ -646,8 +665,8 @@ function ShadowSelectModal({
   onToggle: (id: string) => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black-70" onClick={onClose}>
-      <div className="bg-dark-card border border-dark rounded-xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-70" onClick={onClose}>
+      <div className="bg-dark-card border-0 w-full h-full min-h-screen overflow-y-auto p-6 shadow-xl" onClick={e => e.stopPropagation()}>
         <h2 className="text-xl font-semibold text-light mb-4">Выберите теневой аспект</h2>
         <div className="grid grid-cols-1 gap-3">
           {shadows.map(s => {
@@ -657,12 +676,12 @@ function ShadowSelectModal({
                 key={s.id}
                 type="button"
                 onClick={() => onToggle(s.id)}
-                className={`text-left p-3 rounded-lg border flex items-center gap-3 transition-colors ${selected ? 'border-blue-500 bg-blue-500-20' : 'border-dark bg-dark-bg hover-bg-dark-hover'}`}
+                className={`text-left p-4 rounded-lg border flex items-center gap-3 transition-colors ${selected ? 'border-blue-500 bg-blue-500-20' : 'border-dark bg-dark-bg hover-bg-dark-hover'}`}
               >
                 <span className="text-2xl">{s.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-light">{s.title}</h4>
-                  <p className="text-sm text-gray-400 truncate">{s.description}</p>
+                <div className="flex-1 min-w-0 flex flex-col gap-1">
+                  <h4 className="text-base font-medium text-light">{s.title}</h4>
+                  <p className="text-xs text-gray-400 truncate">{s.description}</p>
                 </div>
                 {selected && <span className="text-green-400">✓</span>}
               </button>
@@ -706,7 +725,8 @@ function BeliefModal({
               key={b}
               type="button"
               onClick={() => onChange(b)}
-              className="px-2 py-1 rounded text-sm bg-dark-bg border border-dark text-gray-400 hover-text-light"
+              className="rounded-lg text-sm bg-dark-bg border border-dark text-gray-400 hover-text-light"
+              style={{ padding: '4px 8px' }}
             >
               {b}
             </button>
@@ -759,7 +779,8 @@ function ValueModal({
               key={v}
               type="button"
               onClick={() => onChange(v)}
-              className="px-2 py-1 rounded text-sm bg-dark-bg border border-dark text-gray-400 hover-text-light"
+              className="rounded-lg text-sm bg-dark-bg border border-dark text-gray-400 hover-text-light"
+              style={{ padding: '4px 8px' }}
             >
               {v}
             </button>

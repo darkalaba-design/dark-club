@@ -165,6 +165,10 @@ html {
   margin-top: 0.5rem;
 }
 
+.mt-3 {
+  margin-top: 0.75rem;
+}
+
 .mt-4 {
   margin-top: 1rem;
 }
@@ -179,6 +183,10 @@ html {
 
 .mt-12 {
   margin-top: 3rem;
+}
+
+.ml-2 {
+  margin-left: 0.5rem;
 }
 
 .ml-4 {
@@ -202,6 +210,11 @@ html {
   padding: 1.5rem;
 }
 
+.px-3 {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
 .px-4 {
   padding-left: 1rem;
   padding-right: 1rem;
@@ -220,6 +233,11 @@ html {
 .px-12 {
   padding-left: 3rem;
   padding-right: 3rem;
+}
+
+.py-1 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
 }
 
 .py-2 {
