@@ -176,6 +176,7 @@ export default function App() {
                     targetAction={state.targetAction}
                     currentStep={state.currentStep}
                     selectedProfile={selectedProfile ?? undefined}
+                    onStepClick={goToStep}
                   />
                 )}
               </div>
