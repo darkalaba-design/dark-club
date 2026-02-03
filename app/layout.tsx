@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import PWAProvider from './components/PWAProvider'
 
 export const metadata: Metadata = {
   title: 'Dark Club - Баттл Манипуляций',
@@ -26,7 +27,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru">
-      <body>{children}</body>
+      <body>
+        <PWAProvider>{children}</PWAProvider>
+      </body>
     </html>
   )
 }
