@@ -20,7 +20,7 @@ export default function ProfileCard({ profile, onClick }: ProfileCardProps) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full text-left bg-dark-card border border-dark rounded-xl p-4 hover-bg-dark-hover transition-colors hover-transform -translate-y-1"
+      className="w-full text-left bg-dark-card rounded-xl p-4 hover-bg-dark-hover transition-colors hover-transform -translate-y-1"
     >
       <div className="flex items-start gap-4">
         <span className="text-4xl flex-shrink-0">{profile.avatar}</span>
