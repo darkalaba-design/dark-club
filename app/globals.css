@@ -381,6 +381,10 @@ html {
   border-width: 2px;
 }
 
+.border-solid {
+  border-style: solid;
+}
+
 .border-t {
   border-top-width: 1px;
 }
