@@ -75,6 +75,11 @@ button {
   border: none;
 }
 
+/* кнопки с классом border-2 показывают рамку (глобальный border: none иначе скрывает) */
+button.border-2 {
+  border-style: solid;
+}
+
 html {
   color-scheme: dark;
   background: #0a0a0a;

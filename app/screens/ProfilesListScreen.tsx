@@ -38,15 +38,15 @@ export default function ProfilesListScreen({ onOpenProfile, onBack }: ProfilesLi
 
       <button
         onClick={() => setShowCreateModal(true)}
-        className="w-full md-w-auto mb-8 px-6 py-3 bg-blue-500 hover-bg-blue-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+        className="w-full md-w-auto mb-8 px-6 py-3 bg-transparent border-2 border-blue-500 text-blue-500 hover:bg-blue-500/10 font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
       >
         <span>+</span>
         <span>Добавить профиль</span>
       </button>
 
       {profiles.length === 0 ? (
-        <div className="text-center py-16 bg-dark-card border border-dark rounded-xl">
-          <div className="text-6xl mb-4">🎭</div>
+        <div className="text-center py-6 bg-dark-card border border-dark rounded-xl">
+          <div className="text-5xl mb-4 h-12">🎭</div>
           <p className="text-gray-300 mb-6 max-w-md mx-auto">
             Создайте профили людей, чтобы анализировать их психологию и строить стратегии влияния.
           </p>
