@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 
-/** localStorage key: popup shown once and dismissed = don't auto-show again */
+/** Ключ localStorage: окно установки закрыто — больше не показывать автоматически */
 const INSTALL_POPUP_DISMISSED_KEY = 'dark-club-pwa-install-popup-dismissed'
 
 export interface BeforeInstallPromptEvent extends Event {
@@ -11,7 +11,7 @@ export interface BeforeInstallPromptEvent extends Event {
 }
 
 /**
- * Detects iOS (Safari) for "Share → Add to Home Screen" instructions.
+ * Определяет iOS (Safari) для подсказки «Поделиться → На экран «Домой»».
  */
 export function isIOS(): boolean {
   if (typeof navigator === 'undefined') return false
@@ -22,8 +22,8 @@ export function isIOS(): boolean {
 }
 
 /**
- * True when app is running as installed PWA (standalone).
- * Do not show install UI in this case.
+ * true, если приложение запущено как установленная PWA (standalone).
+ * В этом случае не показывать установку.
  */
 export function isStandalone(): boolean {
   if (typeof window === 'undefined') return false
@@ -34,10 +34,10 @@ export function isStandalone(): boolean {
 }
 
 /**
- * Hook: install prompt state and popup behavior.
- * - Captures beforeinstallprompt (Android/Chromium).
- * - Tracks "show once on first visit" via localStorage.
- * - Does not show if already installed (standalone).
+ * Хук: состояние установки и окно подсказки.
+ * - Перехватывает beforeinstallprompt (Android/Chromium).
+ * - «Показать один раз» при первом визите через localStorage.
+ * - Не показывать, если приложение уже установлено (standalone).
  */
 export function useInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)

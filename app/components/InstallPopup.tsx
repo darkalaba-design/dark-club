@@ -1,10 +1,10 @@
 'use client'
 
 /**
- * Reusable install popup:
- * - Android/Chromium: Install button that triggers prompt()
- * - iOS: "Tap Share → Add to Home Screen" instructions
- * Simple, clean UI; no external libraries; responsive.
+ * Окно установки приложения:
+ * - Android/Chromium: кнопка «Установить» вызывает prompt()
+ * - iOS: подсказка «Поделиться → На экран «Домой»»
+ * Простой интерфейс, без внешних библиотек, адаптивный.
  */
 
 interface InstallPopupProps {
@@ -28,7 +28,7 @@ export default function InstallPopup({
 
   return (
     <>
-      {/* Backdrop: tap to close */}
+      {/* Затемнение: клик закрывает */}
       <div
         role="presentation"
         onClick={onClose}
@@ -39,10 +39,10 @@ export default function InstallPopup({
           zIndex: 50,
         }}
       />
-      {/* Popup card */}
+      {/* Карточка окна */}
       <div
         role="dialog"
-        aria-label="Install app"
+        aria-label="Установить приложение"
         onClick={(e) => e.stopPropagation()}
         style={{
           position: 'fixed',
@@ -68,7 +68,7 @@ export default function InstallPopup({
             color: '#e0e0e0',
           }}
         >
-          Install app
+          Установить приложение
         </h3>
 
         {isIOS ? (
@@ -80,8 +80,8 @@ export default function InstallPopup({
               lineHeight: 1.5,
             }}
           >
-            Tap <strong style={{ color: '#e0e0e0' }}>Share</strong> at the bottom of the screen, then{' '}
-            <strong style={{ color: '#e0e0e0' }}>Add to Home Screen</strong>.
+            Нажмите <strong style={{ color: '#e0e0e0' }}>Поделиться</strong> внизу экрана, затем{' '}
+            <strong style={{ color: '#e0e0e0' }}>На экран «Домой»</strong>.
           </p>
         ) : hasDeferredPrompt ? (
           <p
@@ -92,7 +92,7 @@ export default function InstallPopup({
               lineHeight: 1.5,
             }}
           >
-            Add this app to your device for a better experience.
+            Добавьте приложение на устройство для удобного доступа.
           </p>
         ) : (
           <p
@@ -103,7 +103,7 @@ export default function InstallPopup({
               lineHeight: 1.5,
             }}
           >
-            Use your browser menu to install this app.
+            Используйте меню браузера для установки приложения.
           </p>
         )}
 
@@ -128,7 +128,7 @@ export default function InstallPopup({
               cursor: 'pointer',
             }}
           >
-            Not now
+            Не сейчас
           </button>
           {!isIOS && hasDeferredPrompt && (
             <button
@@ -147,7 +147,7 @@ export default function InstallPopup({
                 opacity: isPrompting ? 0.8 : 1,
               }}
             >
-              {isPrompting ? '…' : 'Install'}
+              {isPrompting ? '…' : 'Установить'}
             </button>
           )}
         </div>

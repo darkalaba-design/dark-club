@@ -5,10 +5,10 @@ import { useInstallPrompt } from '../hooks/useInstallPrompt'
 import InstallPopup from './InstallPopup'
 
 /**
- * PWAProvider: install popup (show once), bottom install button, offline banner.
- * - Registers Service Worker via useInstallPrompt.
- * - Popup shows only once on first visit; dismissal stored in localStorage.
- * - Does not show install UI when app is already installed (standalone).
+ * PWAProvider: окно установки (показ один раз), кнопка «Установить» внизу, баннер «Нет сети».
+ * Регистрирует Service Worker через useInstallPrompt.
+ * Окно установки показывается один раз при первом визите; закрытие сохраняется в localStorage.
+ * Не показывает установку, если приложение уже установлено (standalone).
  */
 
 export default function PWAProvider({ children }: { children: React.ReactNode }) {
@@ -43,7 +43,7 @@ export default function PWAProvider({ children }: { children: React.ReactNode })
     <>
       {children}
 
-      {/* Install popup: auto-show once on first visit, or when opened via bottom button */}
+      {/* Окно установки: авто-показ один раз или по кнопке внизу */}
       <InstallPopup
         isOpen={isPopupVisible}
         onClose={dismissPopup}
@@ -53,7 +53,7 @@ export default function PWAProvider({ children }: { children: React.ReactNode })
         isPrompting={installResult === 'prompting'}
       />
 
-      {/* Bottom install button: opens same popup; hidden when standalone */}
+      {/* Кнопка «Установить приложение» внизу; скрыта в standalone */}
       {canOfferInstall && (
         <button
           type="button"
@@ -73,13 +73,13 @@ export default function PWAProvider({ children }: { children: React.ReactNode })
             cursor: 'pointer',
             boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
           }}
-          aria-label="Install app"
+          aria-label="Установить приложение"
         >
-          Install app
+          Установить приложение
         </button>
       )}
 
-      {/* Offline banner: show when network is unavailable */}
+      {/* Баннер при отсутствии сети */}
       {!online && (
         <div
           role="status"
@@ -98,7 +98,7 @@ export default function PWAProvider({ children }: { children: React.ReactNode })
             textAlign: 'center',
           }}
         >
-          You are offline
+          Нет подключения к интернету
         </div>
       )}
     </>

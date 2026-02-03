@@ -97,6 +97,13 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
     }
   }
 
+  useEffect(() => {
+    if (modal) {
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = '' }
+    }
+  }, [modal])
+
   return (
     <div className="max-w-2xl mx-auto">
       {/* Breadcrumbs / Back */}
@@ -523,55 +530,65 @@ function EditProfileModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black-70" onClick={onClose}>
-      <div className="bg-dark-card border border-dark rounded-xl max-w-md w-full p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-        <h2 className="text-xl font-semibold text-light mb-4">Редактировать профиль</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Имя</label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">Аватар</label>
-            <div className="flex flex-wrap gap-2">
-              {EMOJI_OPTIONS.map(emoji => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => setAvatar(emoji)}
-                  className={`w-10 h-10 rounded-lg border-2 text-xl flex items-center justify-center transition-colors ${avatar === emoji ? 'border-blue-500 bg-blue-500-20' : 'border-dark bg-dark-bg hover-border-gray-500'}`}
-                >
-                  {emoji}
-                </button>
-              ))}
+    <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
+      <button
+        type="button"
+        onClick={onClose}
+        className="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover-text-light hover-border-dark-hover transition-colors"
+        aria-label="Закрыть"
+      >
+        <span className="text-xl leading-none" aria-hidden>×</span>
+      </button>
+      <div className="min-h-screen flex items-center justify-center p-4 pt-16">
+        <div className="bg-dark-card border border-dark rounded-xl max-w-md w-full p-6 shadow-xl">
+          <h2 className="text-xl font-semibold text-light mb-4">Редактировать профиль</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Имя</label>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light"
+              />
             </div>
-          </div>
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Тип отношений</label>
-            <select
-              value={relationshipType}
-              onChange={e => setRelationshipType(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light"
-            >
-              {relationshipTypes.map(key => (
-                <option key={key} value={key}>{relationshipTypeLabels[key]}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex gap-3 pt-4">
-            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-gray-400 hover-text-light">
-              Отмена
-            </button>
-            <button type="submit" disabled={!name.trim()} className="flex-1 py-2 rounded-lg bg-blue-500 text-white font-medium disabled-opacity-50">
-              Сохранить
-            </button>
-          </div>
-        </form>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Аватар</label>
+              <div className="flex flex-wrap gap-2">
+                {EMOJI_OPTIONS.map(emoji => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setAvatar(emoji)}
+                    className={`w-10 h-10 rounded-lg border-2 text-xl flex items-center justify-center transition-colors ${avatar === emoji ? 'border-blue-500 bg-blue-500-20' : 'border-dark bg-dark-bg hover-border-gray-500'}`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Тип отношений</label>
+              <select
+                value={relationshipType}
+                onChange={e => setRelationshipType(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light"
+              >
+                {relationshipTypes.map(key => (
+                  <option key={key} value={key}>{relationshipTypeLabels[key]}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-3 pt-4">
+              <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-gray-400 hover-text-light">
+                Отмена
+              </button>
+              <button type="submit" disabled={!name.trim()} className="flex-1 py-2 rounded-lg bg-blue-500 text-white font-medium disabled-opacity-50">
+                Сохранить
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )
@@ -587,8 +604,16 @@ function PsychotypeSelectModal({
   onSelect: (id: string) => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-70" onClick={onClose}>
-      <div className="bg-dark-card border-0 w-full h-full min-h-screen overflow-y-auto p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
+      <button
+        type="button"
+        onClick={onClose}
+        className="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover-text-light hover-border-dark-hover transition-colors"
+        aria-label="Закрыть"
+      >
+        <span className="text-xl leading-none" aria-hidden>×</span>
+      </button>
+      <div className="p-6 pt-16">
         <h2 className="text-xl font-semibold text-light mb-4">Выберите психотип</h2>
         <div className="grid grid-cols-1 gap-3">
           {psychotypes.map(p => (
@@ -606,9 +631,6 @@ function PsychotypeSelectModal({
             </button>
           ))}
         </div>
-        <button type="button" onClick={onClose} className="mt-4 w-full py-2 rounded-lg text-gray-400 hover-text-light">
-          Отмена
-        </button>
       </div>
     </div>
   )
@@ -624,9 +646,17 @@ function ComplexSelectModal({
   onToggle: (id: string) => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-70" onClick={onClose}>
-      <div className="bg-dark-card border-0 w-full h-full min-h-screen overflow-y-auto p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-        <h2 className="text-xl font-semibold text-light mb-4">Выберите комплекс</h2>
+    <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
+      <button
+        type="button"
+        onClick={onClose}
+        className="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover-text-light hover-border-dark-hover transition-colors"
+        aria-label="Закрыть"
+      >
+        <span className="text-xl leading-none" aria-hidden>×</span>
+      </button>
+      <div className="p-6 pt-16">
+        <h2 className="text-xl font-semibold text-light mb-4">Добавить комплекс</h2>
         <div className="grid grid-cols-1 gap-3">
           {complexes.map(c => {
             const selected = selectedIds.includes(c.id)
@@ -647,9 +677,6 @@ function ComplexSelectModal({
             )
           })}
         </div>
-        <button type="button" onClick={onClose} className="mt-4 w-full py-2 rounded-lg text-gray-400 hover-text-light">
-          Готово
-        </button>
       </div>
     </div>
   )
@@ -665,9 +692,17 @@ function ShadowSelectModal({
   onToggle: (id: string) => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-70" onClick={onClose}>
-      <div className="bg-dark-card border-0 w-full h-full min-h-screen overflow-y-auto p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-        <h2 className="text-xl font-semibold text-light mb-4">Выберите теневой аспект</h2>
+    <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
+      <button
+        type="button"
+        onClick={onClose}
+        className="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover-text-light hover-border-dark-hover transition-colors"
+        aria-label="Закрыть"
+      >
+        <span className="text-xl leading-none" aria-hidden>×</span>
+      </button>
+      <div className="p-6 pt-16">
+        <h2 className="text-xl font-semibold text-light mb-4">Добавить теневой аспект</h2>
         <div className="grid grid-cols-1 gap-3">
           {shadows.map(s => {
             const selected = selectedIds.includes(s.id)
@@ -688,9 +723,6 @@ function ShadowSelectModal({
             )
           })}
         </div>
-        <button type="button" onClick={onClose} className="mt-4 w-full py-2 rounded-lg text-gray-400 hover-text-light">
-          Готово
-        </button>
       </div>
     </div>
   )
@@ -708,42 +740,52 @@ function BeliefModal({
   onAdd: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black-70" onClick={onClose}>
-      <div className="bg-dark-card border border-dark rounded-xl max-w-md w-full p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-        <h2 className="text-xl font-semibold text-light mb-4">Добавить убеждение</h2>
-        <p className="text-sm text-gray-400 mb-2">Выберите из примеров или введите своё</p>
-        <input
-          type="text"
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          placeholder="Например: Деньги — корень зла"
-          className="w-full px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light placeholder-gray-500 mb-3"
-        />
-        <div className="flex flex-wrap gap-2 mb-4">
-          {beliefsExamples.map(b => (
-            <button
-              key={b}
-              type="button"
-              onClick={() => onChange(b)}
-              className="rounded-lg text-sm bg-dark-bg border border-dark text-gray-400 hover-text-light"
-              style={{ padding: '4px 8px' }}
-            >
-              {b}
+    <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
+      <button
+        type="button"
+        onClick={onClose}
+        className="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover-text-light hover-border-dark-hover transition-colors"
+        aria-label="Закрыть"
+      >
+        <span className="text-xl leading-none" aria-hidden>×</span>
+      </button>
+      <div className="min-h-screen flex items-center justify-center p-4 pt-16">
+        <div className="bg-dark-card border border-dark rounded-xl max-w-md w-full p-6 shadow-xl">
+          <h2 className="text-xl font-semibold text-light mb-4">Добавить убеждение</h2>
+          <p className="text-sm text-gray-400 mb-2">Выберите из примеров или введите своё</p>
+          <input
+            type="text"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            placeholder="Например: Деньги — корень зла"
+            className="w-full px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light placeholder-gray-500 mb-3"
+          />
+          <div className="flex flex-wrap gap-2 mb-4">
+            {beliefsExamples.map(b => (
+              <button
+                key={b}
+                type="button"
+                onClick={() => onChange(b)}
+                className="rounded-lg text-sm bg-dark-bg border border-dark text-gray-400 hover-text-light"
+                style={{ padding: '4px 8px' }}
+              >
+                {b}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-3">
+            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-gray-400 hover-text-light">
+              Отмена
             </button>
-          ))}
-        </div>
-        <div className="flex gap-3">
-          <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-gray-400 hover-text-light">
-            Отмена
-          </button>
-          <button
-            type="button"
-            onClick={onAdd}
-            disabled={!value.trim()}
-            className="flex-1 py-2 rounded-lg bg-blue-500 text-white font-medium disabled-opacity-50"
-          >
-            Добавить
-          </button>
+            <button
+              type="button"
+              onClick={onAdd}
+              disabled={!value.trim()}
+              className="flex-1 py-2 rounded-lg bg-blue-500 text-white font-medium disabled-opacity-50"
+            >
+              Добавить
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -762,42 +804,52 @@ function ValueModal({
   onAdd: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black-70" onClick={onClose}>
-      <div className="bg-dark-card border border-dark rounded-xl max-w-md w-full p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-        <h2 className="text-xl font-semibold text-light mb-4">Добавить ценность</h2>
-        <p className="text-sm text-gray-400 mb-2">Выберите из примеров или введите свою</p>
-        <input
-          type="text"
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          placeholder="Например: Семья"
-          className="w-full px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light placeholder-gray-500 mb-3"
-        />
-        <div className="flex flex-wrap gap-2 mb-4">
-          {valuesExamples.map(v => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => onChange(v)}
-              className="rounded-lg text-sm bg-dark-bg border border-dark text-gray-400 hover-text-light"
-              style={{ padding: '4px 8px' }}
-            >
-              {v}
+    <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
+      <button
+        type="button"
+        onClick={onClose}
+        className="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover-text-light hover-border-dark-hover transition-colors"
+        aria-label="Закрыть"
+      >
+        <span className="text-xl leading-none" aria-hidden>×</span>
+      </button>
+      <div className="min-h-screen flex items-center justify-center p-4 pt-16">
+        <div className="bg-dark-card border border-dark rounded-xl max-w-md w-full p-6 shadow-xl">
+          <h2 className="text-xl font-semibold text-light mb-4">Добавить ценность</h2>
+          <p className="text-sm text-gray-400 mb-2">Выберите из примеров или введите свою</p>
+          <input
+            type="text"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            placeholder="Например: Семья"
+            className="w-full px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light placeholder-gray-500 mb-3"
+          />
+          <div className="flex flex-wrap gap-2 mb-4">
+            {valuesExamples.map(v => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => onChange(v)}
+                className="rounded-lg text-sm bg-dark-bg border border-dark text-gray-400 hover-text-light"
+                style={{ padding: '4px 8px' }}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-3">
+            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-gray-400 hover-text-light">
+              Отмена
             </button>
-          ))}
-        </div>
-        <div className="flex gap-3">
-          <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-gray-400 hover-text-light">
-            Отмена
-          </button>
-          <button
-            type="button"
-            onClick={onAdd}
-            disabled={!value.trim()}
-            className="flex-1 py-2 rounded-lg bg-blue-500 text-white font-medium disabled-opacity-50"
-          >
-            Добавить
-          </button>
+            <button
+              type="button"
+              onClick={onAdd}
+              disabled={!value.trim()}
+              className="flex-1 py-2 rounded-lg bg-blue-500 text-white font-medium disabled-opacity-50"
+            >
+              Добавить
+            </button>
+          </div>
         </div>
       </div>
     </div>
