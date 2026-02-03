@@ -46,18 +46,18 @@ export default function Step2Victim({
       <p className="text-gray-400 mb-6">На кого вы хотите воздействовать?</p>
 
       {/* Табы: Общая роль | Мой профиль */}
-      <div className="flex gap-2 mb-6 p-1 bg-dark-bg rounded-lg border border-dark w-full max-w-md">
+      <div className="flex gap-2 mb-6 p-1 bg-dark-bg rounded-lg w-full max-w-md">
         <button
           type="button"
           onClick={handleTabRole}
-          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${audienceTab === 'role' ? 'bg-dark-card text-light border border-dark' : 'text-gray-400 hover-text-light'}`}
+          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${audienceTab === 'role' ? 'bg-dark-card text-light' : 'text-gray-400 hover-text-light'}`}
         >
           Общая роль
         </button>
         <button
           type="button"
           onClick={handleTabProfile}
-          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${audienceTab === 'profile' ? 'bg-dark-card text-light border border-dark' : 'text-gray-400 hover-text-light'}`}
+          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${audienceTab === 'profile' ? 'bg-dark-card text-light' : 'text-gray-400 hover-text-light'}`}
         >
           Мой профиль
         </button>

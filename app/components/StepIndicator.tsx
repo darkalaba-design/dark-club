@@ -21,7 +21,7 @@ export default function StepIndicator({ currentStep, totalSteps = 3 }: StepIndic
             <div
               key={stepNum}
               className={`w-2 h-2 rounded-full transition-all ${isActive
-                ? 'bg-blue-500 w-8'
+                ? 'bg-blue-500 w-24'
                 : isCompleted
                   ? 'bg-green-500'
                   : 'bg-gray-600'

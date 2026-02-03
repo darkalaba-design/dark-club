@@ -679,6 +679,10 @@ html {
   width: 2rem;
 }
 
+.w-24 {
+  width: 6rem;
+}
+
 .h-2 {
   height: 0.5rem;
 }

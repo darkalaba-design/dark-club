@@ -93,10 +93,10 @@ export default function Breadcrumbs({
           const stepClassName = `
             flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all
             ${isCompleted && !isCurrent
-              ? 'bg-dark-card border border-dark text-gray-300 cursor-pointer hover:border-gray-500'
+              ? 'bg-dark-card text-gray-300 cursor-pointer hover-bg-dark-hover'
               : isCurrent
-                ? 'bg-blue-500-20 border border-blue-500-30 text-blue-400'
-                : 'bg-dark-bg border border-dark text-gray-500 opacity-50'
+                ? 'bg-blue-500-20 text-blue-400'
+                : 'bg-dark-bg text-gray-500 opacity-50'
             }
           `
 
