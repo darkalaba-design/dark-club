@@ -29,6 +29,7 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
   const profile = getProfile(profileId)
   const [savedVisible, setSavedVisible] = useState(false)
   const [modal, setModal] = useState<ModalKind>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [beliefInput, setBeliefInput] = useState('')
   const [valueInput, setValueInput] = useState('')
 
@@ -67,11 +68,12 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
   const profileComplexes = profile.complexes.map(id => complexes.find(c => c.id === id)).filter(Boolean) as Complex[]
   const profileShadows = profile.shadows.map(id => shadows.find(s => s.id === id)).filter(Boolean) as Shadow[]
 
-  const handleDelete = () => {
-    if (window.confirm(`Удалить профиль «${profile.name}»?`)) {
-      deleteProfile(profileId)
-      onBack()
-    }
+  const handleDeleteClick = () => setShowDeleteConfirm(true)
+
+  const handleDeleteConfirm = () => {
+    deleteProfile(profileId)
+    setShowDeleteConfirm(false)
+    onBack()
   }
 
   const handleEditSave = (name: string, avatar: string, relationshipType: string) => {
@@ -140,7 +142,7 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
                 ✏️ Редактировать
               </button>
               <button
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
                 className="text-sm text-red-400 hover-text-red-300 transition-colors"
                 title="Удалить"
               >
@@ -393,6 +395,45 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
           onClose={() => { setModal(null); setValueInput('') }}
           onAdd={handleAddValue}
         />
+      )}
+
+      {/* Подтверждение удаления профиля */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black-70"
+          onClick={() => setShowDeleteConfirm(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-dialog-title"
+        >
+          <div
+            className="bg-dark-card border border-dark rounded-xl max-w-sm w-full p-6 shadow-xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 id="delete-dialog-title" className="text-xl font-semibold text-light mb-2">
+              Удалить профиль «{profile.name}»?
+            </h2>
+            <p className="text-sm text-gray-400 mb-6">
+              Профиль будет удалён без возможности восстановления.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-2.5 rounded-lg text-gray-400 hover-text-light border border-dark hover-border-dark-hover transition-colors font-medium"
+              >
+                Отменить
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                className="flex-1 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
+              >
+                Удалить
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

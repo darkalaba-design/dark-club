@@ -75,7 +75,8 @@ button {
   border: none;
 }
 
-/* кнопки с классом border-2 показывают рамку (глобальный border: none иначе скрывает) */
+/* кнопки с классом border или border-2 показывают рамку (глобальный border: none иначе скрывает) */
+button.border,
 button.border-2 {
   border-style: solid;
 }
@@ -427,6 +428,26 @@ html {
 
 .bg-green-500 {
   background-color: #10b981;
+}
+
+.bg-red-500 {
+  background-color: #ef4444;
+}
+
+.hover-bg-red-600:hover {
+  background-color: #dc2626;
+}
+
+.text-red-400 {
+  color: #f87171;
+}
+
+.hover-text-red-300:hover {
+  color: #fca5a5;
+}
+
+.hover-text-red-400:hover {
+  color: #f87171;
 }
 
 .bg-gray-600 {

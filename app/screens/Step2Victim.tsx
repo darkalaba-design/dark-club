@@ -25,15 +25,9 @@ export default function Step2Victim({
   getProfile
 }: Step2VictimProps) {
   const appData = useAppData()
-  const [showProfileModal, setShowProfileModal] = useState(false)
   const [audienceTab, setAudienceTab] = useState<'role' | 'profile'>(
     selectedProfileId ? 'profile' : 'role'
   )
-
-  const selectedProfile = selectedProfileId ? getProfile(selectedProfileId) : null
-  const psychotype = selectedProfile?.psychotype
-    ? psychotypes.find(p => p.id === selectedProfile.psychotype)
-    : null
 
   if (appData.loading) {
     return (
@@ -43,14 +37,8 @@ export default function Step2Victim({
     )
   }
 
-  const handleTabRole = () => {
-    setAudienceTab('role')
-    setShowProfileModal(false)
-  }
-
-  const handleTabProfile = () => {
-    setAudienceTab('profile')
-  }
+  const handleTabRole = () => setAudienceTab('role')
+  const handleTabProfile = () => setAudienceTab('profile')
 
   return (
     <div>
@@ -92,88 +80,35 @@ export default function Step2Victim({
 
       {audienceTab === 'profile' && (
         <div>
-          {selectedProfile ? (
-            <div className="mb-4 p-4 bg-dark-card border border-dark rounded-xl flex items-center gap-4">
-              <span className="text-4xl">{selectedProfile.avatar}</span>
-              <div>
-                <h3 className="font-semibold text-light">{selectedProfile.name}</h3>
-                <span className="text-sm text-gray-400">
-                  {relationshipTypeLabels[selectedProfile.relationshipType] ?? selectedProfile.relationshipType}
-                  {psychotype && ` · ${psychotype.title} ${psychotype.icon}`}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowProfileModal(true)}
-                className="ml-auto text-sm text-blue-400 hover-text-light"
-              >
-                Сменить
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowProfileModal(true)}
-              className="w-full md-w-auto px-6 py-4 bg-dark-card border border-dark rounded-xl text-light hover-bg-dark-hover transition-colors flex items-center justify-center gap-2"
-            >
-              <span>👥</span>
-              <span>Выбрать из моих профилей</span>
-            </button>
-          )}
-
-          {profiles.length === 0 && (
-            <p className="mt-4 text-sm text-gray-500">
+          {profiles.length === 0 ? (
+            <p className="text-sm text-gray-500">
               Нет созданных профилей. Добавьте их в разделе «Профили».
             </p>
-          )}
-        </div>
-      )}
-
-      {/* Модальное окно выбора профиля */}
-      {showProfileModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black-70"
-          onClick={() => setShowProfileModal(false)}
-        >
-          <div
-            className="bg-dark-card border border-dark rounded-xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6 shadow-xl"
-            onClick={e => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-semibold text-light mb-4">Выберите профиль</h3>
-            {profiles.length === 0 ? (
-              <p className="text-gray-400 mb-4">Нет профилей. Создайте их в разделе «Профили».</p>
-            ) : (
-              <div className="grid grid-cols-1 gap-3">
-                {profiles.map(profile => (
-                  <button
+          ) : (
+            <div className="grid grid-cols-1 md-grid-cols-2 lg-grid-cols-3 gap-4">
+              {profiles.map(profile => {
+                const pPsychotype = profile.psychotype
+                  ? psychotypes.find(pr => pr.id === profile.psychotype)
+                  : null
+                const descParts = [
+                  relationshipTypeLabels[profile.relationshipType] ?? profile.relationshipType,
+                  pPsychotype && `${pPsychotype.title} ${pPsychotype.icon}`,
+                  profile.completeness != null ? `${profile.completeness}%` : null
+                ].filter(Boolean)
+                const description = descParts.join(' · ')
+                return (
+                  <SelectionCard
                     key={profile.id}
-                    type="button"
-                    onClick={() => {
-                      onSelectProfile(profile.id)
-                      setShowProfileModal(false)
-                    }}
-                    className="text-left p-4 rounded-lg border border-dark bg-dark-bg hover-bg-dark-hover transition-colors flex items-center gap-3"
-                  >
-                    <span className="text-2xl">{profile.avatar}</span>
-                    <div className="min-w-0 flex-1 flex flex-col gap-1">
-                      <h4 className="text-base font-semibold text-light truncate">{profile.name}</h4>
-                      <p className="text-xs text-gray-400">
-                        {relationshipTypeLabels[profile.relationshipType] ?? profile.relationshipType}
-                        {profile.completeness != null && ` · ${profile.completeness}%`}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowProfileModal(false)}
-              className="mt-4 w-full py-2 rounded-lg text-gray-400 hover-text-light"
-            >
-              Отмена
-            </button>
-          </div>
+                    icon={profile.avatar}
+                    title={profile.name}
+                    description={description}
+                    selected={selectedProfileId === profile.id}
+                    onClick={() => onSelectProfile(profile.id)}
+                  />
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
