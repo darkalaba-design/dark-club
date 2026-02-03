@@ -106,7 +106,7 @@ export default function App() {
   return (
     <div className="min-h-screen">
       {/* Навигация: Главная, Анализ, Профили */}
-      <nav className="border-b border-dark bg-dark-bg sticky top-0 z-40">
+      <nav className="border-b border-dark bg-dark-bg sticky top-0 z-40 rounded-lg">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
           <button
             type="button"

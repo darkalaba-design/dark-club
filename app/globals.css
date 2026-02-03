@@ -185,6 +185,14 @@ html {
   margin-top: 3rem;
 }
 
+.mt-10 {
+  margin-top: 2.5rem;
+}
+
+.mt-16 {
+  margin-top: 4rem;
+}
+
 .ml-2 {
   margin-left: 0.5rem;
 }
@@ -280,6 +288,10 @@ html {
 
 .pt-8 {
   padding-top: 2rem;
+}
+
+.pt-10 {
+  padding-top: 2.5rem;
 }
 
 .text-center {
