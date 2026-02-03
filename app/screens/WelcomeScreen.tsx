@@ -59,8 +59,8 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
       </button>
 
       {/* Пресуппозиции НЛП */}
-      <section className="mt-16 mb-8 max-w-2xl w-full px-4">
-        <div className="bg-dark-card border border-dark rounded-xl p-6 md-p-6">
+      <section className="mt-16 mb-8 max-w-2xl w-full pt-10">
+        <div className="bg-dark-card border border-dark rounded-xl py-6 px-0 md:py-6 md:px-0">
           <h3 className="text-lg font-semibold text-light mb-5">Ключевые пресуппозиции НЛП включают:</h3>
           <ul className="space-y-4 text-sm text-gray-400 leading-relaxed">
             <li className="flex flex-col gap-1">
