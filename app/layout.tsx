@@ -14,14 +14,6 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'Dark Club',
   },
-  // Splash screen (iOS): большой логотип на чёрном фоне — через Metadata API, чтобы теги точно попали в <head>
-  links: [
-    { rel: 'apple-touch-startup-image', href: '/splash.png', media: '(device-width: 390px) and (device-height: 844px)' },
-    { rel: 'apple-touch-startup-image', href: '/splash.png', media: '(device-width: 428px) and (device-height: 926px)' },
-    { rel: 'apple-touch-startup-image', href: '/splash.png', media: '(device-width: 430px) and (device-height: 932px)' },
-    { rel: 'apple-touch-startup-image', href: '/splash.png', media: '(device-width: 393px) and (device-height: 852px)' },
-    { rel: 'apple-touch-startup-image', href: '/splash.png' },
-  ],
 }
 
 export const viewport: Viewport = {
@@ -35,6 +27,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru">
+      <head>
+        {/* Splash screen (iOS): большой логотип на чёрном фоне */}
+        <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 390px) and (device-height: 844px)" />
+        <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 428px) and (device-height: 926px)" />
+        <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 430px) and (device-height: 932px)" />
+        <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 393px) and (device-height: 852px)" />
+        <link rel="apple-touch-startup-image" href="/splash.png" />
+      </head>
       <body>
         <PWAProvider>{children}</PWAProvider>
       </body>
