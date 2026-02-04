@@ -11,7 +11,7 @@ export default function TechniqueCard({ technique, onClick }: TechniqueCardProps
   return (
     <div
       onClick={onClick}
-      className="bg-dark-card border border-dark rounded-xl p-5 hover-border-blue-500 cursor-pointer transition-all hover-transform hover-translate-y hover-shadow-lg"
+      className="technique-card bg-dark-card border border-dark rounded-xl p-5 hover-border-blue-500 cursor-pointer transition-all hover-transform hover-translate-y hover-shadow-lg"
     >
       <div className="flex items-start gap-4">
         <div className="text-4xl">{technique.icon}</div>

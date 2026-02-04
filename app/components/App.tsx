@@ -230,6 +230,8 @@ export default function App() {
                   techniques={state.results.techniques}
                   profileTargets={state.results.profileTargets}
                   selectedProfile={selectedProfile ?? undefined}
+                  audienceContext={state.audienceContext}
+                  targetActionDetail={state.targetActionDetail}
                   onReset={reset}
                 />
               )}

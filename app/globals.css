@@ -586,6 +586,19 @@ html {
   background-color: #3a3a3a;
 }
 
+/* Карточки: при ховере — темнее фона карточки (#252525 → #1e1e1e) */
+.hover-bg-dark-card-darker:hover {
+  background-color: #1e1e1e;
+}
+
+/* Карточка техники: тёмный ховер (повышенная специфичность) */
+.technique-card {
+  background-color: #252525;
+}
+.technique-card:hover {
+  background-color: #1a1a1a;
+}
+
 .hover-bg-dark-page:hover {
   background-color: #0a0a0a;
 }
@@ -870,17 +883,184 @@ html {
 }
 
 /* Досье: иерархия заголовков и списки, минималистично */
-.dossier-view { font-size: 0.875rem; color: #d1d5db; }
-.dossier-view h1 { font-size: 1.125rem; font-weight: 700; color: #60a5fa; margin: 0 0 0.5rem; line-height: 1.3; }
-.dossier-view h2 { font-size: 1rem; font-weight: 600; color: #93c5fd; margin: 1rem 0 0.35rem; line-height: 1.35; }
-.dossier-view h3 { font-size: 0.9375rem; font-weight: 600; color: #e5e7eb; margin: 0.75rem 0 0.25rem; line-height: 1.35; }
-.dossier-view p { margin: 0 0 0.5rem; line-height: 1.5; }
-.dossier-view ul { margin: 0.25rem 0 0.75rem; padding-left: 1.25rem; list-style-type: disc; }
-.dossier-view li { margin: 0.2rem 0; line-height: 1.45; }
-.dossier-view strong { font-weight: 600; color: #e5e7eb; }
-.dossier-view .dossier-list { border-left: 2px solid rgba(96, 165, 250, 0.35); padding-left: 1rem; margin: 0.5rem 0 0.75rem; }
-.dossier-view .dossier-list li { list-style: none; padding-left: 0; margin: 0.25rem 0; }
-.dossier-view .dossier-section { margin-bottom: 1rem; }
-.dossier-view .dossier-section-title { font-weight: 600; color: #93c5fd; margin-bottom: 0.25rem; }
-.dossier-view .dossier-body { color: #d1d5db; white-space: pre-wrap; word-break: break-word; }
+/* Dossier / AI-сценарий: иерархия заголовков по цвету и размеру */
+.dossier-view { font-size: 0.9375rem; color: #cbd5e1; line-height: 1.5; }
+.dossier-view .dossier-section { margin-bottom: 1.25rem; }
+.dossier-view .dossier-body { color: #cbd5e1; white-space: pre-wrap; word-break: break-word; margin-top: 0.35rem; }
 .dossier-view .dossier-paragraph { margin-bottom: 0.75rem; }
+
+/* Уровень 1 — главные разделы: крупно, яркий синий, отступ сверху */
+.dossier-view .dossier-section-h1 { margin-top: 1.5rem; }
+.dossier-view .dossier-section-h1:first-child { margin-top: 0; }
+.dossier-view .dossier-section-h1 h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.02em;
+  margin: 0 0 0.5rem;
+  line-height: 1.3;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+/* Уровень 2 — подразделы: средний размер, светло-синий */
+.dossier-view .dossier-section-h2 { margin-top: 1.25rem; }
+.dossier-view .dossier-section-h2 h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #7dd3fc;
+  margin: 0 0 0.4rem;
+  line-height: 1.35;
+}
+
+/* Уровень 3 — подподразделы: меньше, приглушённый голубой */
+.dossier-view .dossier-section-h3 { margin-top: 1rem; }
+.dossier-view .dossier-section-h3 h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #bae6fd;
+  margin: 0 0 0.3rem;
+  line-height: 1.35;
+}
+
+/* Уровень 4 — мелкие подзаголовки: размер текста, нейтральный светлый */
+.dossier-view .dossier-section-h4 { margin-top: 0.75rem; }
+.dossier-view .dossier-section-h4 h4 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin: 0 0 0.25rem;
+  line-height: 1.4;
+}
+
+/* Строковые подзаголовки вида "Примеры фраз:", "Цель:" — фиолетовый акцент */
+.dossier-view .dossier-section-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #a78bfa;
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.01em;
+}
+
+.dossier-view p { margin: 0 0 0.5rem; line-height: 1.55; }
+.dossier-view ul { margin: 0.35rem 0 0.75rem; padding-left: 1.25rem; list-style-type: disc; }
+.dossier-view li { margin: 0.25rem 0; line-height: 1.45; color: #cbd5e1; }
+.dossier-view strong { font-weight: 600; color: #e2e8f0; }
+
+/* Списки с левой полоской — бирюзовый акцент */
+.dossier-view .dossier-list {
+  border-left: 3px solid rgba(45, 212, 191, 0.5);
+  padding-left: 1rem;
+  margin: 0.5rem 0 0.75rem;
+}
+.dossier-view .dossier-list li { list-style: none; padding-left: 0; margin: 0.3rem 0; color: #cbd5e1; }
+
+/* AI Loader: технологичный лоадер с градиентами и полосками */
+@keyframes ai-loader-ring {
+  to { transform: rotate(360deg); }
+}
+@keyframes ai-loader-ring-reverse {
+  to { transform: rotate(-360deg); }
+}
+@keyframes ai-loader-bar {
+  0%, 100% { transform: scaleY(0.25); opacity: 0.6; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+@keyframes ai-loader-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+@keyframes ai-loader-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.ai-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  min-height: 200px;
+}
+
+.ai-loader-core {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin-bottom: 2rem;
+}
+
+.ai-loader-ring-outer {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: #3b82f6;
+  border-right-color: #06b6d4;
+  border-bottom-color: #8b5cf6;
+  border-left-color: #3b82f6;
+  animation: ai-loader-ring 2.5s linear infinite;
+}
+
+.ai-loader-ring-inner {
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: #8b5cf6;
+  border-right-color: #3b82f6;
+  border-bottom-color: #06b6d4;
+  border-left-color: #8b5cf6;
+  animation: ai-loader-ring-reverse 1.8s linear infinite;
+}
+
+.ai-loader-glow {
+  position: absolute;
+  inset: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, rgba(139, 92, 246, 0.1) 50%, transparent 70%);
+  animation: ai-loader-glow 2s ease-in-out infinite;
+}
+
+.ai-loader-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  height: 48px;
+  margin-bottom: 1.5rem;
+}
+
+.ai-loader-bar {
+  width: 6px;
+  min-height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(to top, #1e3a5f, #3b82f6 30%, #06b6d4 60%, #8b5cf6);
+  background-size: 200% 100%;
+  animation: ai-loader-bar 1.2s ease-in-out infinite;
+  transform-origin: bottom;
+}
+.ai-loader-bar:nth-child(1) { animation-delay: 0s; }
+.ai-loader-bar:nth-child(2) { animation-delay: 0.1s; }
+.ai-loader-bar:nth-child(3) { animation-delay: 0.2s; }
+.ai-loader-bar:nth-child(4) { animation-delay: 0.3s; }
+.ai-loader-bar:nth-child(5) { animation-delay: 0.4s; }
+.ai-loader-bar:nth-child(6) { animation-delay: 0.5s; }
+.ai-loader-bar:nth-child(7) { animation-delay: 0.6s; }
+.ai-loader-bar:nth-child(8) { animation-delay: 0.7s; }
+.ai-loader-bar:nth-child(9) { animation-delay: 0.8s; }
+.ai-loader-bar:nth-child(10) { animation-delay: 0.9s; }
+.ai-loader-bar:nth-child(11) { animation-delay: 1s; }
+.ai-loader-bar:nth-child(12) { animation-delay: 1.1s; }
+
+.ai-loader-text {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #e5e7eb;
+  margin-bottom: 0.25rem;
+}
+.ai-loader-sub {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+}
