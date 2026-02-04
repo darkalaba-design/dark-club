@@ -948,17 +948,28 @@ function DossierView({
                 </div>
               )
             }
-            const listItems = lines.filter(l => /^[—\-]\s/.test(l) || /^\d+[.)]\s/.test(l))
-            const hasList = listItems.length > 0 && listItems.length >= lines.length - 1
-            if (hasList && listItems.length) {
+            const isListLine = (l: string) => /^[—\-]\s/.test(l) || /^\d+[.)]\s/.test(l)
+            const listItemIndices = lines.map((l, idx) => (isListLine(l) ? idx : -1)).filter(idx => idx >= 0)
+            const hasList = listItemIndices.length > 0
+            const firstListIdx = listItemIndices[0] ?? lines.length
+            const headerLines = firstListIdx > 0 ? lines.slice(0, firstListIdx) : []
+            const listLines = lines.slice(firstListIdx).filter(isListLine)
+            if (hasList && listLines.length > 0) {
               return (
-                <ul key={i} className="dossier-list">
-                  {listItems.map((line, j) => (
-                    <li key={j} className="whitespace-pre-wrap">
-                      {line.replace(/^[—\-]\s/, '').replace(/^\d+[.)]\s/, '')}
-                    </li>
-                  ))}
-                </ul>
+                <div key={i} className="dossier-section">
+                  {headerLines.length > 0 && (
+                    <div className="dossier-section-title whitespace-pre-wrap">
+                      {headerLines.map(line => line.trim()).join('\n')}
+                    </div>
+                  )}
+                  <ul className="dossier-list">
+                    {listLines.map((line, j) => (
+                      <li key={j} className="whitespace-pre-wrap">
+                        {line.replace(/^[—\-]\s/, '').replace(/^\d+[.)]\s/, '')}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )
             }
             const isSectionHeader = /^[А-Яа-яA-Za-z0-9\s\-]+:\s*$/.test(trimmedFirst) && lines.length >= 1
