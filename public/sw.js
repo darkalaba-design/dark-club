@@ -14,6 +14,7 @@ const SHELL_URLS = [
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
+  '/logo.svg',
 ]
 
 self.addEventListener('install', (event) => {
@@ -35,6 +36,28 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
+  const url = new URL(event.request.url)
+  // Критичные ресурсы (логотип, иконки) — сначала кеш, потом сеть (быстрее на iOS)
+  const criticalAssets = ['/logo.svg', '/icon-192.png', '/icon-512.png', '/manifest.json']
+  const isCritical = criticalAssets.some(asset => url.pathname === asset)
+
+  if (isCritical) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached
+        return fetch(event.request).then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+          }
+          return response
+        })
+      })
+    )
+    return
+  }
+
+  // Остальные ресурсы: сеть сначала, кеш как fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {

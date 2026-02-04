@@ -1,7 +1,5 @@
 'use client'
 
-import Image from 'next/image'
-
 interface WelcomeScreenProps {
   onStart: () => void
 }
@@ -13,14 +11,15 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         className="mt-6 mb-0 relative flex items-center justify-center overflow-hidden"
         style={{ width: 140, height: 140, minWidth: 0, minHeight: 0, maxWidth: 140, maxHeight: 140, flexShrink: 0, flexGrow: 0, boxSizing: 'border-box' }}
       >
-        <Image
+        <img
           src="/logo.svg"
           alt="Dark Club"
-          width={100}
-          height={100}
+          width={140}
+          height={140}
           className="object-contain pb-6"
           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-          priority
+          loading="eager"
+          fetchPriority="high"
         />
       </div>
       <h1 className="text-5xl font-bold mb-4 text-light">DARK CLUB</h1>
