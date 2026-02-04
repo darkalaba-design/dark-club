@@ -25,6 +25,7 @@ import {
   type ProfileParamOption
 } from '../data/profileParams'
 import Accordion from '../components/Accordion'
+import { sendProfileToDossierWebhook } from '../lib/dossierWebhook'
 
 const EMOJI_OPTIONS = ['👤', '👔', '👩', '🧑', '🫂', '💼', '🎭', '⭐', '🔥', '💜']
 
@@ -47,6 +48,9 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
   const [triggerNegativeInput, setTriggerNegativeInput] = useState('')
   const [painPointInput, setPainPointInput] = useState('')
   const [showProgressBar, setShowProgressBar] = useState(false)
+  const [showDossierView, setShowDossierView] = useState(false)
+  const [dossierLoading, setDossierLoading] = useState(false)
+  const [dossierError, setDossierError] = useState<string | null>(null)
 
   const showSaved = useCallback(() => {
     setSavedVisible(true)
@@ -95,6 +99,21 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
     handleUpdate({ name, avatar, relationshipType })
     setModal(null)
   }
+
+  const handleCreateOrUpdateDossier = useCallback(async () => {
+    if (!profileId || !profile) return
+    setDossierLoading(true)
+    setDossierError(null)
+    try {
+      const result = await sendProfileToDossierWebhook(profile)
+      handleUpdate({ dossier: result, dossierCreatedAt: Date.now() })
+      setShowDossierView(true)
+    } catch (e) {
+      setDossierError(e instanceof Error ? e.message : 'Ошибка отправки')
+    } finally {
+      setDossierLoading(false)
+    }
+  }, [profileId, profile, handleUpdate])
 
   const handleAddBelief = () => {
     const text = beliefInput.trim()
@@ -146,11 +165,11 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
   }
 
   useEffect(() => {
-    if (modal) {
+    if (modal || showDossierView) {
       document.body.style.overflow = 'hidden'
       return () => { document.body.style.overflow = '' }
     }
-  }, [modal])
+  }, [modal, showDossierView])
 
   // Показывать полоску прогресса после прокрутки на 300px, скрывать при прокрутке наверх
   useEffect(() => {
@@ -262,10 +281,33 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
           {completeness === 100 && (
             <p className="text-xs text-green-500 mt-1">✅ Профиль полностью заполнен. Анализ будет максимально точным!</p>
           )}
+          {completeness >= 99 && (
+            <div className="mt-2 block">
+              {!profile.dossier ? (
+                <button
+                  type="button"
+                  onClick={handleCreateOrUpdateDossier}
+                  disabled={dossierLoading}
+                  className="mt-4 w-full md-w-auto px-6 py-3 bg-transparent border-2 border-blue-500 text-blue-500 hover-bg-blue-500-20 font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled-opacity-50"
+                >
+                  {dossierLoading ? 'Отправка…' : 'Создать Досье'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowDossierView(true)}
+                  className="mt-4 w-full md-w-auto px-6 py-3 bg-transparent border-2 border-blue-500 text-blue-500 hover-bg-blue-500-20 font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  Досье профиля
+                </button>
+              )}
+              {dossierError && <p className="text-xs text-red-400 mt-2">{dossierError}</p>}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Section: Пол и возраст — первый блок */}
+      {/* Section: Пол и возраст */}
       <Accordion title="Пол и возраст" icon="👤" defaultOpen={true}>
         <div className="space-y-6">
           <div>
@@ -782,6 +824,20 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
         />
       )}
 
+      {/* Экран досье профиля */}
+      {showDossierView && profile.dossier != null && (
+        <DossierView
+          profileName={profile.name}
+          dossier={profile.dossier}
+          profileUpdatedAt={profile.updatedAt}
+          dossierCreatedAt={profile.dossierCreatedAt ?? 0}
+          onClose={() => setShowDossierView(false)}
+          onUpdateDossier={handleCreateOrUpdateDossier}
+          updating={dossierLoading}
+          updateError={dossierError}
+        />
+      )}
+
       {/* Подтверждение удаления профиля */}
       {showDeleteConfirm && (
         <div
@@ -820,6 +876,178 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function DossierView({
+  profileName,
+  dossier,
+  profileUpdatedAt,
+  dossierCreatedAt,
+  onClose,
+  onUpdateDossier,
+  updating,
+  updateError
+}: {
+  profileName: string
+  dossier: unknown
+  profileUpdatedAt: number
+  dossierCreatedAt: number
+  onClose: () => void
+  onUpdateDossier: () => void
+  updating: boolean
+  updateError: string | null
+}) {
+  const needsUpdate = profileUpdatedAt > dossierCreatedAt
+
+  const renderDossierContent = () => {
+    if (dossier == null) return null
+    // HTML от Make.com — рендерим как разметку (удобно, если сценарий возвращает HTML из ChatGPT)
+    if (typeof dossier === 'string') {
+      if (dossier.trim().startsWith('<')) {
+        return (
+          <div
+            className="dossier-view prose prose-invert max-w-none prose-headings:font-semibold prose-h1:text-lg prose-h1:text-blue-400 prose-h2:text-base prose-h2:text-blue-300 prose-h3:text-sm prose-h3:text-gray-200 prose-p:text-gray-300 prose-li:text-gray-300 prose-strong:text-gray-200 prose-a:text-blue-400 prose-code:text-gray-400"
+            dangerouslySetInnerHTML={{ __html: dossier }}
+          />
+        )
+      }
+      // Обычный текст: # / ## / ###, списки (—, -, 1.), "Секция:", параграфы
+      const blocks = dossier.split(/\n\n+/)
+      return (
+        <div className="dossier-view space-y-0">
+          {blocks.map((block, i) => {
+            const lines = block.split('\n').filter(Boolean)
+            const firstLine = lines[0] ?? ''
+            const trimmedFirst = firstLine.trim()
+            if (/^###\s/.test(trimmedFirst)) {
+              const title = trimmedFirst.replace(/^###\s+/, '')
+              return (
+                <div key={i} className="dossier-section">
+                  <h3>{title}</h3>
+                  {lines.length > 1 && <div className="dossier-body">{lines.slice(1).join('\n')}</div>}
+                </div>
+              )
+            }
+            if (/^##\s/.test(trimmedFirst)) {
+              const title = trimmedFirst.replace(/^##\s+/, '')
+              return (
+                <div key={i} className="dossier-section">
+                  <h2>{title}</h2>
+                  {lines.length > 1 && <div className="dossier-body">{lines.slice(1).join('\n')}</div>}
+                </div>
+              )
+            }
+            if (/^#\s/.test(trimmedFirst)) {
+              const title = trimmedFirst.replace(/^#\s+/, '')
+              return (
+                <div key={i} className="dossier-section">
+                  <h1>{title}</h1>
+                  {lines.length > 1 && <div className="dossier-body">{lines.slice(1).join('\n')}</div>}
+                </div>
+              )
+            }
+            const listItems = lines.filter(l => /^[—\-]\s/.test(l) || /^\d+[.)]\s/.test(l))
+            const hasList = listItems.length > 0 && listItems.length >= lines.length - 1
+            if (hasList && listItems.length) {
+              return (
+                <ul key={i} className="dossier-list">
+                  {listItems.map((line, j) => (
+                    <li key={j} className="whitespace-pre-wrap">
+                      {line.replace(/^[—\-]\s/, '').replace(/^\d+[.)]\s/, '')}
+                    </li>
+                  ))}
+                </ul>
+              )
+            }
+            const isSectionHeader = /^[А-Яа-яA-Za-z0-9\s\-]+:\s*$/.test(trimmedFirst) && lines.length >= 1
+            if (isSectionHeader && trimmedFirst) {
+              return (
+                <div key={i} className="dossier-section">
+                  <div className="dossier-section-title">{firstLine.replace(/:$/, '').trim()}</div>
+                  {lines.length > 1 && <div className="dossier-body">{lines.slice(1).join('\n')}</div>}
+                </div>
+              )
+            }
+            return (
+              <p key={i} className="dossier-paragraph dossier-body">
+                {block}
+              </p>
+            )
+          })}
+        </div>
+      )
+    }
+    // Объект от webhook — форматируем секциями (заголовок + содержимое)
+    if (typeof dossier === 'object' && !Array.isArray(dossier)) {
+      return (
+        <div className="dossier-view space-y-4">
+          {Object.entries(dossier as Record<string, unknown>).map(([key, value]) => (
+            <div key={key} className="dossier-section border-b border-dark pb-4 last-border-b-0">
+              <h3 className="capitalize">{key.replace(/_/g, ' ')}</h3>
+              {value == null ? (
+                <p className="text-sm text-gray-500">—</p>
+              ) : typeof value === 'string' ? (
+                <p className="text-sm text-gray-300 whitespace-pre-wrap">{value}</p>
+              ) : Array.isArray(value) ? (
+                <ul className="list-disc list-inside text-sm text-gray-300 space-y-1">
+                  {value.map((item, i) => (
+                    <li key={i}>{typeof item === 'object' ? JSON.stringify(item) : String(item)}</li>
+                  ))}
+                </ul>
+              ) : typeof value === 'object' ? (
+                <pre className="text-xs text-gray-400 whitespace-pre-wrap break-words">
+                  {JSON.stringify(value, null, 2)}
+                </pre>
+              ) : (
+                <p className="text-sm text-gray-300">{String(value)}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )
+    }
+    if (Array.isArray(dossier)) {
+      return (
+        <ul className="dossier-view dossier-list">
+          {dossier.map((item, i) => (
+            <li key={i}>{typeof item === 'object' ? JSON.stringify(item) : String(item)}</li>
+          ))}
+        </ul>
+      )
+    }
+    return <pre className="dossier-view text-sm dossier-body">{String(dossier)}</pre>
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
+      <button
+        type="button"
+        onClick={onClose}
+        className="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover-text-light hover-border-dark-hover transition-colors"
+        aria-label="Закрыть"
+      >
+        <span className="text-xl leading-none" aria-hidden>×</span>
+      </button>
+      <div className="max-w-3xl mx-auto p-6 pt-16">
+        <h2 className="text-xl font-semibold text-light mb-4">Досье профиля: {profileName}</h2>
+        <div className="mb-6">{renderDossierContent()}</div>
+        {needsUpdate && (
+          <div className="border-t border-dark pt-4">
+            <p className="text-sm text-gray-400 mb-2">Профиль изменён после создания досье.</p>
+            <button
+              type="button"
+              onClick={onUpdateDossier}
+              disabled={updating}
+              className="px-6 py-3 bg-transparent border-2 border-blue-500 text-blue-500 hover-bg-blue-500-20 font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled-opacity-50"
+            >
+              {updating ? 'Обновление…' : 'Обновить досье'}
+            </button>
+            {updateError && <p className="text-xs text-red-400 mt-2">{updateError}</p>}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

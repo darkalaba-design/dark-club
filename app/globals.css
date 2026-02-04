@@ -91,6 +91,10 @@ html {
   display: flex;
 }
 
+.block {
+  display: block;
+}
+
 .flex-col {
   flex-direction: column;
 }
@@ -421,6 +425,10 @@ html {
 }
 
 .bg-blue-500-20 {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.hover-bg-blue-500-20:hover {
   background-color: rgba(59, 130, 246, 0.2);
 }
 
@@ -860,3 +868,19 @@ html {
     flex-direction: row;
   }
 }
+
+/* Досье: иерархия заголовков и списки, минималистично */
+.dossier-view { font-size: 0.875rem; color: #d1d5db; }
+.dossier-view h1 { font-size: 1.125rem; font-weight: 700; color: #60a5fa; margin: 0 0 0.5rem; line-height: 1.3; }
+.dossier-view h2 { font-size: 1rem; font-weight: 600; color: #93c5fd; margin: 1rem 0 0.35rem; line-height: 1.35; }
+.dossier-view h3 { font-size: 0.9375rem; font-weight: 600; color: #e5e7eb; margin: 0.75rem 0 0.25rem; line-height: 1.35; }
+.dossier-view p { margin: 0 0 0.5rem; line-height: 1.5; }
+.dossier-view ul { margin: 0.25rem 0 0.75rem; padding-left: 1.25rem; list-style-type: disc; }
+.dossier-view li { margin: 0.2rem 0; line-height: 1.45; }
+.dossier-view strong { font-weight: 600; color: #e5e7eb; }
+.dossier-view .dossier-list { border-left: 2px solid rgba(96, 165, 250, 0.35); padding-left: 1rem; margin: 0.5rem 0 0.75rem; }
+.dossier-view .dossier-list li { list-style: none; padding-left: 0; margin: 0.25rem 0; }
+.dossier-view .dossier-section { margin-bottom: 1rem; }
+.dossier-view .dossier-section-title { font-weight: 600; color: #93c5fd; margin-bottom: 0.25rem; }
+.dossier-view .dossier-body { color: #d1d5db; white-space: pre-wrap; word-break: break-word; }
+.dossier-view .dossier-paragraph { margin-bottom: 0.75rem; }

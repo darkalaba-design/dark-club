@@ -54,6 +54,10 @@ export interface Profile {
   /** Возрастной диапазон: 25-35, 35-45, 45-55, 55+ */
   age: string | null
   notes: string
+  /** Данные досье от webhook (ответ при создании/обновлении) */
+  dossier: unknown | null
+  /** Время последнего создания/обновления досье — для кнопки «Обновить досье» */
+  dossierCreatedAt: number | null
   createdAt: number
   updatedAt: number
   lastUsed: number | null
@@ -78,7 +82,9 @@ export function createEmptyProfile(name: string, avatar: string = '👤', relati
     painPoints: [],
     gender: null,
     age: null,
-    notes: ''
+    notes: '',
+    dossier: null,
+    dossierCreatedAt: null
   }
 }
 

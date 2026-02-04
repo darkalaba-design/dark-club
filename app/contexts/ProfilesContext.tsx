@@ -23,7 +23,9 @@ function loadProfiles(): Profile[] {
       decisionPace: p.decisionPace ?? null,
       painPoints: p.painPoints ?? [],
       gender: p.gender ?? null,
-      age: typeof p.age === 'number' ? null : (p.age ?? null)
+      age: typeof p.age === 'number' ? null : (p.age ?? null),
+      dossier: p.dossier ?? null,
+      dossierCreatedAt: p.dossierCreatedAt ?? null
     })) as Profile[]
   } catch {
     return []
