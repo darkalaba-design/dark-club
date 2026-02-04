@@ -7,6 +7,9 @@ import type { ProfileTargetItem } from '../data/matchingLogic'
 
 export type MainSection = 'analysis' | 'profiles'
 
+/** Текущее состояние аудитории (контекст) для точности рекомендаций */
+export type AudienceContextId = 'resource' | 'stress' | 'euphoria' | 'apathy' | 'unknown'
+
 export interface AppState {
   currentStep: number // 0 = welcome, 1-3 = steps, 4 = results
   selectedMode: 'communication' | 'marketing' | 'defense'
@@ -14,7 +17,11 @@ export interface AppState {
   manipulatorRole: string | null
   victimRole: string | null
   targetAction: string | null
+  /** Уточнённая формулировка цели (шаг 3.5) */
+  targetActionDetail: string | null
   selectedProfileId: string | null // выбранный профиль на шаге 2 (аудитория)
+  /** Текущее состояние аудитории: в ресурсе, в стрессе и т.д. */
+  audienceContext: AudienceContextId | null
   selectedTechnique: string | null
   results: {
     targets: Target[]
@@ -31,7 +38,9 @@ const initialState: AppState = {
   manipulatorRole: null,
   victimRole: null,
   targetAction: null,
+  targetActionDetail: null,
   selectedProfileId: null,
+  audienceContext: null,
   selectedTechnique: null,
   results: {
     targets: [],
@@ -63,6 +72,10 @@ export function useAppState() {
     setState(prev => ({ ...prev, selectedProfileId: id }))
   }, [])
 
+  const setAudienceContext = useCallback((context: AudienceContextId | null) => {
+    setState(prev => ({ ...prev, audienceContext: context }))
+  }, [])
+
   const setMainSection = useCallback((section: MainSection) => {
     setState(prev => ({ ...prev, mainSection: section }))
   }, [])
@@ -72,7 +85,11 @@ export function useAppState() {
   }, [])
 
   const setTargetAction = useCallback((action: string | null) => {
-    setState(prev => ({ ...prev, targetAction: action }))
+    setState(prev => ({ ...prev, targetAction: action, targetActionDetail: null }))
+  }, [])
+
+  const setTargetActionDetail = useCallback((detail: string | null) => {
+    setState(prev => ({ ...prev, targetActionDetail: detail }))
   }, [])
 
   const setSelectedTechnique = useCallback((technique: string | null) => {
@@ -98,7 +115,9 @@ export function useAppState() {
     setManipulatorRole,
     setVictimRole,
     setTargetAction,
+    setTargetActionDetail,
     setSelectedProfileId,
+    setAudienceContext,
     setMainSection,
     setProfileDetailId,
     setSelectedTechnique,

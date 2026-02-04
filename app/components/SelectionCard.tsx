@@ -22,7 +22,7 @@ export default function SelectionCard({
         p-4 rounded-xl cursor-pointer transition-all duration-200
         border-2
         ${selected
-          ? 'border-blue-500 bg-dark-card-light shadow-lg shadow-blue-500-20 transform -translate-y-1'
+          ? 'border-blue-500 bg-dark-card-selected shadow-lg shadow-blue-500-20 transform -translate-y-1'
           : 'border-dark bg-dark-card hover-border-dark-hover hover-transform hover-translate-y hover-shadow-lg'
         }
       `}

@@ -13,11 +13,22 @@ import { complexes, type Complex } from '../data/complexes'
 import { shadows, type Shadow } from '../data/shadows'
 import { beliefsExamples } from '../data/beliefsExamples'
 import { valuesExamples } from '../data/valuesExamples'
+import { triggersPositiveExamples, triggersNegativeExamples } from '../data/triggersExamples'
+import { painPointsExamples } from '../data/painPointsExamples'
+import {
+  communicationStyleOptions,
+  motivationProfileOptions,
+  referenceOptions,
+  decisionPaceOptions,
+  genderOptions,
+  ageRangeOptions,
+  type ProfileParamOption
+} from '../data/profileParams'
 import Accordion from '../components/Accordion'
 
 const EMOJI_OPTIONS = ['👤', '👔', '👩', '🧑', '🫂', '💼', '🎭', '⭐', '🔥', '💜']
 
-type ModalKind = 'edit' | 'psychotype' | 'complex' | 'shadow' | 'belief' | 'value' | null
+type ModalKind = 'edit' | 'psychotype' | 'complex' | 'shadow' | 'belief' | 'value' | 'triggersPositive' | 'triggersNegative' | 'painPoints' | 'communicationStyle' | 'motivationProfile' | 'reference' | 'decisionPace' | null
 
 interface ProfileDetailScreenProps {
   profileId: string
@@ -32,6 +43,10 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [beliefInput, setBeliefInput] = useState('')
   const [valueInput, setValueInput] = useState('')
+  const [triggerPositiveInput, setTriggerPositiveInput] = useState('')
+  const [triggerNegativeInput, setTriggerNegativeInput] = useState('')
+  const [painPointInput, setPainPointInput] = useState('')
+  const [showProgressBar, setShowProgressBar] = useState(false)
 
   const showSaved = useCallback(() => {
     setSavedVisible(true)
@@ -99,6 +114,37 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
     }
   }
 
+  const triggersPositive = profile.triggersPositive ?? []
+  const triggersNegative = profile.triggersNegative ?? []
+
+  const handleAddTriggerPositive = () => {
+    const text = triggerPositiveInput.trim()
+    if (text && !triggersPositive.includes(text)) {
+      handleUpdate({ triggersPositive: [...triggersPositive, text] })
+      setTriggerPositiveInput('')
+      setModal(null)
+    }
+  }
+
+  const handleAddTriggerNegative = () => {
+    const text = triggerNegativeInput.trim()
+    if (text && !triggersNegative.includes(text)) {
+      handleUpdate({ triggersNegative: [...triggersNegative, text] })
+      setTriggerNegativeInput('')
+      setModal(null)
+    }
+  }
+
+  const painPoints = profile.painPoints ?? []
+  const handleAddPainPoint = () => {
+    const text = painPointInput.trim()
+    if (text && !painPoints.includes(text)) {
+      handleUpdate({ painPoints: [...painPoints, text] })
+      setPainPointInput('')
+      setModal(null)
+    }
+  }
+
   useEffect(() => {
     if (modal) {
       document.body.style.overflow = 'hidden'
@@ -106,8 +152,57 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
     }
   }, [modal])
 
+  // Показывать полоску прогресса после прокрутки на 300px, скрывать при прокрутке наверх
+  useEffect(() => {
+    const SCROLL_THRESHOLD = 300
+    let ticking = false
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        setShowProgressBar(window.scrollY >= SCROLL_THRESHOLD)
+        ticking = false
+      })
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
     <div className="max-w-2xl mx-auto">
+      {/* Синяя полоска прогресса — появляется после 300px прокрутки, выезжает/уезжает плавно */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 4,
+          zIndex: 9999,
+          backgroundColor: '#1a1a1a',
+          transform: showProgressBar ? 'translateY(0)' : 'translateY(-100%)',
+          transition: 'transform 0.25s ease-out'
+        }}
+        role="progressbar"
+        aria-valuenow={completeness}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Профиль заполнен"
+        aria-hidden={!showProgressBar}
+      >
+        <div
+          style={{
+            width: `${completeness}%`,
+            height: '100%',
+            backgroundColor: '#3b82f6',
+            transition: 'width 0.2s ease'
+          }}
+        />
+      </div>
+
+      {/* Небольшой отступ, чтобы контент не уходил под полоску */}
+      <div style={{ height: 4 }} aria-hidden />
+
       {/* Breadcrumbs / Back */}
       <div className="mb-6 flex items-center justify-between">
         <button
@@ -125,7 +220,7 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
       </div>
 
       {/* Header */}
-      <div className="bg-dark-card border border-dark rounded-xl p-6 mb-6">
+      <div className="bg-dark-card border border-dark rounded-xl p-6 mb-6 shadow-lg">
         <div className="flex items-start gap-4">
           <span className="text-5xl flex-shrink-0">{profile.avatar}</span>
           <div className="min-w-0 flex-1 flex flex-col gap-2">
@@ -169,6 +264,55 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
           )}
         </div>
       </div>
+
+      {/* Section: Пол и возраст — первый блок */}
+      <Accordion title="Пол и возраст" icon="👤" defaultOpen={true}>
+        <div className="space-y-6">
+          <div>
+            <h4 className="text-sm font-semibold text-light mb-3">Пол</h4>
+            <div className="flex flex-row gap-3" role="radiogroup" aria-label="Пол">
+              {genderOptions.map(opt => {
+                const selected = profile.gender === opt.id
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => handleUpdate({ gender: opt.id })}
+                    className={`flex-1 flex items-center justify-center gap-3 px-5 py-4 rounded-xl border text-sm font-medium transition-colors ${selected ? 'border-blue-500 bg-blue-500-20 text-light' : 'border-dark bg-dark-bg text-gray-400 hover-border-dark-hover hover-text-light'}`}
+                  >
+                    {opt.icon && <span className="text-xl" aria-hidden>{opt.icon}</span>}
+                    <span>{opt.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-light mb-3">Возраст</h4>
+            <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Возрастной диапазон">
+              {ageRangeOptions.map(opt => {
+                const selected = profile.age === opt.id
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => handleUpdate({ age: opt.id })}
+                    className={`flex flex-col items-center justify-center gap-1.5 px-4 py-4 rounded-xl border text-center min-h-[72px] transition-colors ${selected ? 'border-blue-500 bg-blue-500-20 text-light' : 'border-dark bg-dark-bg text-gray-400 hover-border-dark-hover hover-text-light'}`}
+                  >
+                    {opt.icon && <span className="text-2xl mb-2" aria-hidden>{opt.icon}</span>}
+                    <span className="text-lg font-semibold">{opt.label}</span>
+                    {opt.subtitle && <span className={`text-xs ${selected ? 'text-gray-400' : 'text-gray-500'}`}>{opt.subtitle}</span>}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </Accordion>
 
       {/* Section: Psychotype */}
       <Accordion title="Структура личности" icon="🧠" defaultOpen={true}>
@@ -301,25 +445,197 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
             </button>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-2">
             {profile.values.map((v, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-dark-bg border border-dark text-light"
-              >
-                {v}
+              <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
+                <span className="text-gray-400">{v}</span>
                 <button
                   onClick={() => handleUpdate({ values: profile.values.filter((_, j) => j !== i) })}
-                  className="ml-2 text-gray-500 hover-text-red-400 text-sm leading-none"
+                  className="text-gray-500 hover-text-red-400 text-lg leading-none"
                   aria-label="Удалить"
                 >
                   ×
                 </button>
-              </span>
+              </div>
             ))}
-            <div className="pt-4 w-full">
+            <div className="pt-4">
               <button onClick={() => setModal('value')} className="text-sm text-blue-400 hover-underline">
                 + Добавить ценность
+              </button>
+            </div>
+          </div>
+        )}
+      </Accordion>
+
+      {/* Section: Triggers */}
+      <Accordion title="Триггеры и болевые точки" icon="🎯" defaultOpen={true}>
+        <p className="text-sm text-gray-400 mb-4">
+          Что запускает реакцию: мотивирует или выводит из себя. Персонализирует манипуляцию.
+        </p>
+        <div className="space-y-6">
+          <div>
+            <h4 className="text-sm font-semibold text-light mb-2">Позитивные триггеры (мотивируют, вдохновляют)</h4>
+            {triggersPositive.length === 0 ? (
+              <p className="text-gray-500 text-sm mb-2">Не указаны</p>
+            ) : (
+              <div className="space-y-2 mb-2">
+                {triggersPositive.map((t, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
+                    <span className="text-gray-400">{t}</span>
+                    <button
+                      onClick={() => handleUpdate({ triggersPositive: triggersPositive.filter((_, j) => j !== i) })}
+                      className="text-gray-500 hover-text-red-400 text-lg leading-none"
+                      aria-label="Удалить"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setModal('triggersPositive')}
+              className="text-sm text-blue-400 hover-underline"
+            >
+              + Добавить позитивный триггер
+            </button>
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-light mb-2">Негативные триггеры (выводят из себя, демотивируют)</h4>
+            {triggersNegative.length === 0 ? (
+              <p className="text-gray-500 text-sm mb-2">Не указаны</p>
+            ) : (
+              <div className="space-y-2 mb-2">
+                {triggersNegative.map((t, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
+                    <span className="text-gray-400">{t}</span>
+                    <button
+                      onClick={() => handleUpdate({ triggersNegative: triggersNegative.filter((_, j) => j !== i) })}
+                      className="text-gray-500 hover-text-red-400 text-lg leading-none"
+                      aria-label="Удалить"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setModal('triggersNegative')}
+              className="text-sm text-blue-400 hover-underline"
+            >
+              + Добавить негативный триггер
+            </button>
+          </div>
+        </div>
+      </Accordion>
+
+      {/* Section: Дополнительные параметры — Коммуникационный стиль */}
+      <Accordion title="Коммуникационный стиль" icon="💬" defaultOpen={false}>
+        <p className="text-sm text-gray-400 mb-4">Как человек общается? Влияет на выбор фраз: прямому говорим прямо, непрямому — через истории.</p>
+        {!profile.communicationStyle ? (
+          <button
+            onClick={() => setModal('communicationStyle')}
+            className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+          >
+            Выбрать стиль
+          </button>
+        ) : (
+          <ParamCard
+            option={communicationStyleOptions.find(o => o.id === profile.communicationStyle)!}
+            onChange={() => setModal('communicationStyle')}
+            onRemove={() => handleUpdate({ communicationStyle: null })}
+          />
+        )}
+      </Accordion>
+
+      {/* Section: Мотивационный профиль */}
+      <Accordion title="Мотивационный профиль (К/От)" icon="🎯" defaultOpen={false}>
+        <p className="text-sm text-gray-400 mb-4">Что его мотивирует? Для точного фрейминга: «К» — «Ты получишь...», «От» — «Ты избежишь...»</p>
+        {!profile.motivationProfile ? (
+          <button
+            onClick={() => setModal('motivationProfile')}
+            className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+          >
+            Выбрать профиль
+          </button>
+        ) : (
+          <ParamCard
+            option={motivationProfileOptions.find(o => o.id === profile.motivationProfile)!}
+            onChange={() => setModal('motivationProfile')}
+            onRemove={() => handleUpdate({ motivationProfile: null })}
+          />
+        )}
+      </Accordion>
+
+      {/* Section: Референция */}
+      <Accordion title="Референция" icon="🧭" defaultOpen={false}>
+        <p className="text-sm text-gray-400 mb-4">На что опирается при решениях? Внутренняя — свой опыт, внешняя — мнение экспертов и других.</p>
+        {!profile.reference ? (
+          <button
+            onClick={() => setModal('reference')}
+            className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+          >
+            Выбрать тип референции
+          </button>
+        ) : (
+          <ParamCard
+            option={referenceOptions.find(o => o.id === profile.reference)!}
+            onChange={() => setModal('reference')}
+            onRemove={() => handleUpdate({ reference: null })}
+          />
+        )}
+      </Accordion>
+
+      {/* Section: Темп принятия решений */}
+      <Accordion title="Темп принятия решений" icon="⏱️" defaultOpen={false}>
+        <p className="text-sm text-gray-400 mb-4">Как быстро принимает решения? Влияет на тактику: импульсивному — дефицит, взвешенному — факты и время, прокрастинатору — дедлайны и малые шаги.</p>
+        {!profile.decisionPace ? (
+          <button
+            onClick={() => setModal('decisionPace')}
+            className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+          >
+            Выбрать темп
+          </button>
+        ) : (
+          <ParamCard
+            option={decisionPaceOptions.find(o => o.id === profile.decisionPace)!}
+            onChange={() => setModal('decisionPace')}
+            onRemove={() => handleUpdate({ decisionPace: null })}
+          />
+        )}
+      </Accordion>
+
+      {/* Section: Болевые точки */}
+      <Accordion title="Болевые точки (текущие проблемы)" icon="🩹" defaultOpen={false}>
+        <p className="text-sm text-gray-400 mb-4">С чем он сейчас борется? Прямая персонализация фраз: если болит «недооценённость», используем лесть и признание.</p>
+        {painPoints.length === 0 ? (
+          <div>
+            <p className="text-gray-400 mb-3">Болевые точки не указаны</p>
+            <button
+              onClick={() => setModal('painPoints')}
+              className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+            >
+              Добавить болевую точку
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {painPoints.map((p, i) => (
+              <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
+                <span className="text-gray-400">{p}</span>
+                <button
+                  onClick={() => handleUpdate({ painPoints: painPoints.filter((_, j) => j !== i) })}
+                  className="text-gray-500 hover-text-red-400 text-lg leading-none"
+                  aria-label="Удалить"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            <div className="pt-4">
+              <button onClick={() => setModal('painPoints')} className="text-sm text-blue-400 hover-underline">
+                + Добавить болевую точку
               </button>
             </div>
           </div>
@@ -394,6 +710,75 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
           onChange={setValueInput}
           onClose={() => { setModal(null); setValueInput('') }}
           onAdd={handleAddValue}
+        />
+      )}
+      {modal === 'triggersPositive' && (
+        <TriggerModal
+          title="Добавить позитивный триггер"
+          subtitle="Что мотивирует, вдохновляет"
+          examples={triggersPositiveExamples}
+          value={triggerPositiveInput}
+          onChange={setTriggerPositiveInput}
+          onClose={() => { setModal(null); setTriggerPositiveInput('') }}
+          onAdd={handleAddTriggerPositive}
+        />
+      )}
+      {modal === 'triggersNegative' && (
+        <TriggerModal
+          title="Добавить негативный триггер"
+          subtitle="Что выводит из себя, демотивирует"
+          examples={triggersNegativeExamples}
+          value={triggerNegativeInput}
+          onChange={setTriggerNegativeInput}
+          onClose={() => { setModal(null); setTriggerNegativeInput('') }}
+          onAdd={handleAddTriggerNegative}
+        />
+      )}
+      {modal === 'painPoints' && (
+        <TriggerModal
+          title="Добавить болевую точку"
+          subtitle="С чем он сейчас борется? Прямая персонализация фраз."
+          examples={painPointsExamples}
+          value={painPointInput}
+          onChange={setPainPointInput}
+          onClose={() => { setModal(null); setPainPointInput('') }}
+          onAdd={handleAddPainPoint}
+        />
+      )}
+      {modal === 'communicationStyle' && (
+        <SelectOneParamModal
+          title="Коммуникационный стиль"
+          options={communicationStyleOptions}
+          currentId={profile.communicationStyle}
+          onClose={() => setModal(null)}
+          onSelect={id => { handleUpdate({ communicationStyle: id }); setModal(null) }}
+        />
+      )}
+      {modal === 'motivationProfile' && (
+        <SelectOneParamModal
+          title="Мотивационный профиль"
+          options={motivationProfileOptions}
+          currentId={profile.motivationProfile}
+          onClose={() => setModal(null)}
+          onSelect={id => { handleUpdate({ motivationProfile: id }); setModal(null) }}
+        />
+      )}
+      {modal === 'reference' && (
+        <SelectOneParamModal
+          title="Референция"
+          options={referenceOptions}
+          currentId={profile.reference}
+          onClose={() => setModal(null)}
+          onSelect={id => { handleUpdate({ reference: id }); setModal(null) }}
+        />
+      )}
+      {modal === 'decisionPace' && (
+        <SelectOneParamModal
+          title="Темп принятия решений"
+          options={decisionPaceOptions}
+          currentId={profile.decisionPace}
+          onClose={() => setModal(null)}
+          onSelect={id => { handleUpdate({ decisionPace: id }); setModal(null) }}
         />
       )}
 
@@ -548,6 +933,82 @@ function ExpandableShadowCard({ shadow, onRemove }: { shadow: Shadow; onRemove: 
           <p><strong className="text-light">Как работать:</strong> {shadow.howToWork}</p>
         </div>
       )}
+    </div>
+  )
+}
+
+function ParamCard({
+  option,
+  onChange,
+  onRemove
+}: {
+  option: ProfileParamOption
+  onChange: () => void
+  onRemove: () => void
+}) {
+  return (
+    <div className="border border-blue-500-30 rounded-xl p-4 bg-dark-bg flex items-start justify-between gap-2">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onChange}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onChange() } }}
+        className="flex-1 min-w-0 cursor-pointer"
+      >
+        <h4 className="font-semibold text-light">{option.label}</h4>
+        {option.description && <p className="text-sm text-gray-400 mt-1">{option.description}</p>}
+      </div>
+      <button
+        type="button"
+        onClick={e => { e.stopPropagation(); onRemove() }}
+        className="text-gray-500 hover-text-red-400 text-lg flex-shrink-0"
+        aria-label="Удалить"
+      >
+        ×
+      </button>
+    </div>
+  )
+}
+
+function SelectOneParamModal({
+  title,
+  options,
+  currentId,
+  onClose,
+  onSelect
+}: {
+  title: string
+  options: ProfileParamOption[]
+  currentId: string | null
+  onClose: () => void
+  onSelect: (id: string) => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
+      <button
+        type="button"
+        onClick={onClose}
+        className="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover-text-light hover-border-dark-hover transition-colors"
+        aria-label="Закрыть"
+      >
+        <span className="text-xl leading-none" aria-hidden>×</span>
+      </button>
+      <div className="p-6 pt-16">
+        <h2 className="text-xl font-semibold text-light mb-4">{title}</h2>
+        <div className="grid grid-cols-1 gap-3">
+          {options.map(opt => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => onSelect(opt.id)}
+              className="text-left p-4 rounded-lg border border-dark bg-dark-bg hover-bg-dark-hover transition-colors flex flex-col gap-1"
+            >
+              <span className="text-base font-medium text-light">{opt.label}</span>
+              {opt.description && <span className="text-xs text-gray-400">{opt.description}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -875,6 +1336,76 @@ function ValueModal({
                 style={{ padding: '4px 8px' }}
               >
                 {v}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-3">
+            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-gray-400 hover-text-light">
+              Отмена
+            </button>
+            <button
+              type="button"
+              onClick={onAdd}
+              disabled={!value.trim()}
+              className="flex-1 py-2 rounded-lg bg-blue-500 text-white font-medium disabled-opacity-50"
+            >
+              Добавить
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TriggerModal({
+  title,
+  subtitle,
+  examples,
+  value,
+  onChange,
+  onClose,
+  onAdd
+}: {
+  title: string
+  subtitle: string
+  examples: string[]
+  value: string
+  onChange: (v: string) => void
+  onClose: () => void
+  onAdd: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
+      <button
+        type="button"
+        onClick={onClose}
+        className="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover-text-light hover-border-dark-hover transition-colors"
+        aria-label="Закрыть"
+      >
+        <span className="text-xl leading-none" aria-hidden>×</span>
+      </button>
+      <div className="min-h-screen flex items-center justify-center p-4 pt-16">
+        <div className="bg-dark-card border border-dark rounded-xl max-w-md w-full p-6 shadow-xl">
+          <h2 className="text-xl font-semibold text-light mb-1">{title}</h2>
+          <p className="text-sm text-gray-400 mb-4">{subtitle}</p>
+          <input
+            type="text"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            placeholder="Например: Когда его хвалят публично"
+            className="w-full px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light placeholder-gray-500 mb-3"
+          />
+          <div className="flex flex-wrap gap-2 mb-4">
+            {examples.map(ex => (
+              <button
+                key={ex}
+                type="button"
+                onClick={() => onChange(ex)}
+                className="rounded-lg text-sm bg-dark-bg border border-dark text-gray-400 hover-text-light"
+                style={{ padding: '4px 8px' }}
+              >
+                {ex}
               </button>
             ))}
           </div>

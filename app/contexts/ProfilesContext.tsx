@@ -11,8 +11,20 @@ function loadProfiles(): Profile[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
-    const parsed = JSON.parse(raw) as Profile[]
-    return Array.isArray(parsed) ? parsed : []
+    const parsed = JSON.parse(raw) as Partial<Profile>[]
+    if (!Array.isArray(parsed)) return []
+    return parsed.map(p => ({
+      ...p,
+      triggersPositive: p.triggersPositive ?? [],
+      triggersNegative: p.triggersNegative ?? [],
+      communicationStyle: p.communicationStyle ?? null,
+      motivationProfile: p.motivationProfile ?? null,
+      reference: p.reference ?? null,
+      decisionPace: p.decisionPace ?? null,
+      painPoints: p.painPoints ?? [],
+      gender: p.gender ?? null,
+      age: typeof p.age === 'number' ? null : (p.age ?? null)
+    })) as Profile[]
   } catch {
     return []
   }

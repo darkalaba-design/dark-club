@@ -6,12 +6,22 @@ import { useAppData } from '../hooks/useAppData'
 import { relationshipTypeLabels } from '../data/profiles'
 import { psychotypes } from '../data/psychotypes'
 import type { Profile } from '../data/profiles'
+import type { AudienceContextId } from '../hooks/useAppState'
+
+const AUDIENCE_CONTEXT_OPTIONS: { id: AudienceContextId; label: string }[] = [
+  { id: 'resource', label: 'В ресурсе (спокоен, открыт)' },
+  { id: 'stress', label: 'В стрессе (раздражён, закрыт)' },
+  { id: 'euphoria', label: 'В эйфории (перевозбуждён)' },
+  { id: 'apathy', label: 'В апатии (выгорел, безразличен)' },
+  { id: 'unknown', label: 'Неизвестно' }
+]
 
 interface Step2VictimProps {
   selectedRole: string | null
   selectedProfileId: string | null
   onSelect: (roleId: string) => void
   onSelectProfile: (profileId: string) => void
+  onContextSelected: (contextId: AudienceContextId) => void
   profiles: (Profile & { completeness?: number })[]
   getProfile: (id: string) => Profile | null
 }
@@ -21,6 +31,7 @@ export default function Step2Victim({
   selectedProfileId,
   onSelect,
   onSelectProfile,
+  onContextSelected,
   profiles,
   getProfile
 }: Step2VictimProps) {
@@ -28,6 +39,7 @@ export default function Step2Victim({
   const [audienceTab, setAudienceTab] = useState<'role' | 'profile'>(
     selectedProfileId ? 'profile' : 'role'
   )
+  const [showContextPopup, setShowContextPopup] = useState(false)
 
   if (appData.loading) {
     return (
@@ -72,7 +84,10 @@ export default function Step2Victim({
               title={role.title}
               description={role.description}
               selected={selectedRole === role.id}
-              onClick={() => onSelect(role.id)}
+              onClick={() => {
+                onSelect(role.id)
+                setShowContextPopup(true)
+              }}
             />
           ))}
         </div>
@@ -103,12 +118,51 @@ export default function Step2Victim({
                     title={profile.name}
                     description={description}
                     selected={selectedProfileId === profile.id}
-                    onClick={() => onSelectProfile(profile.id)}
+                    onClick={() => {
+                      onSelectProfile(profile.id)
+                      setShowContextPopup(true)
+                    }}
                   />
                 )
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Попап: текущее состояние (контекст) аудитории */}
+      {showContextPopup && (selectedRole || selectedProfileId) && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black-70"
+          onClick={() => setShowContextPopup(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="context-dialog-title"
+        >
+          <div
+            className="bg-dark-card-selected border-2 border-blue-500 rounded-xl w-full p-6 shadow-lg shadow-blue-500-20"
+            style={{ maxWidth: 320 }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 id="context-dialog-title" className="text-lg font-semibold text-light mb-4">
+              💡 Текущее состояние (контекст)
+            </h3>
+            <div className="flex flex-col gap-2">
+              {AUDIENCE_CONTEXT_OPTIONS.map(opt => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    onContextSelected(opt.id)
+                    setShowContextPopup(false)
+                  }}
+                  className="text-left px-4 py-3 rounded-lg bg-dark-bg-blue border border-blue-500-30 text-light hover-bg-dark-page hover-border-blue-500 transition-colors cursor-pointer"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

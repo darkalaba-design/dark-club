@@ -25,7 +25,9 @@ export default function App() {
     setManipulatorRole,
     setVictimRole,
     setTargetAction,
+    setTargetActionDetail,
     setSelectedProfileId,
+    setAudienceContext,
     setMainSection,
     setProfileDetailId,
     setSelectedTechnique,
@@ -74,6 +76,10 @@ export default function App() {
 
   const handleActionSelect = (actionId: string) => {
     setTargetAction(actionId)
+  }
+
+  const handleActionDetailSelected = (detail: string) => {
+    setTargetActionDetail(detail)
     setTimeout(() => nextStep(), 300)
   }
 
@@ -91,7 +97,6 @@ export default function App() {
   const handleVictimSelect = (roleId: string) => {
     setSelectedProfileId(null)
     setVictimRole(roleId)
-    setTimeout(() => nextStep(), 300)
   }
 
   const handleProfileSelect = (profileId: string) => {
@@ -100,6 +105,10 @@ export default function App() {
     setVictimRole(null)
     setSelectedProfileId(profileId)
     setVictimRole(relationshipTypeToVictimRoleId[profile.relationshipType] ?? 'stranger')
+  }
+
+  const handleContextSelected = (contextId: import('../hooks/useAppState').AudienceContextId) => {
+    setAudienceContext(contextId)
     setTimeout(() => nextStep(), 300)
   }
 
@@ -198,6 +207,7 @@ export default function App() {
                   selectedProfileId={state.selectedProfileId}
                   onSelect={handleVictimSelect}
                   onSelectProfile={handleProfileSelect}
+                  onContextSelected={handleContextSelected}
                   profiles={profilesWithCompleteness}
                   getProfile={getProfile}
                 />
@@ -207,6 +217,7 @@ export default function App() {
                 <Step3Action
                   selectedAction={state.targetAction}
                   onSelect={handleActionSelect}
+                  onActionDetailSelected={handleActionDetailSelected}
                 />
               )}
 
