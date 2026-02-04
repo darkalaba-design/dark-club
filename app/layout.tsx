@@ -28,12 +28,16 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <head>
-        {/* Splash screen (iOS): большой логотип на чёрном фоне */}
-        <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 390px) and (device-height: 844px)" />
-        <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 428px) and (device-height: 926px)" />
-        <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 430px) and (device-height: 932px)" />
-        <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 393px) and (device-height: 852px)" />
-        <link rel="apple-touch-startup-image" href="/splash.png" />
+        {/* Splash screen (iOS): размеры в физических пикселях для каждого устройства */}
+        <link rel="apple-touch-startup-image" href="/splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/splash-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+        <link rel="apple-touch-startup-image" href="/splash-1170x2532.png" />
       </head>
       <body>
         <PWAProvider>{children}</PWAProvider>
