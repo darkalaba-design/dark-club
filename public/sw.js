@@ -6,7 +6,8 @@
  * Minimal strategy; no advanced caching.
  */
 
-const CACHE_NAME = 'dark-club-v1'
+// Уникальное имя кеша с версией (обновляется при изменении ресурсов)
+const CACHE_NAME = 'dark-club-v2'
 
 // App shell: entry and static assets to cache on install
 const SHELL_URLS = [
@@ -37,20 +38,42 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
   const url = new URL(event.request.url)
-  // Критичные ресурсы (логотип, иконки) — сначала кеш, потом сеть (быстрее на iOS)
-  const criticalAssets = ['/logo.svg', '/icon-192.png', '/icon-512.png', '/manifest.json']
-  const isCritical = criticalAssets.some(asset => url.pathname === asset)
+  // Только наш домен (работает на любом домене через Vercel)
+  if (url.origin !== self.location.origin) return
+
+  // Критичные ресурсы (логотип, иконки, splash) — сначала кеш, потом сеть (быстрее на iOS)
+  const criticalAssets = [
+    '/logo.svg',
+    '/icon-192.png',
+    '/icon-512.png',
+    '/manifest.json',
+  ]
+  const isCritical = criticalAssets.some(asset => url.pathname === asset || url.pathname.startsWith('/splash-'))
 
   if (isCritical) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
-        if (cached) return cached
+        if (cached) {
+          // Обновляем кеш в фоне
+          fetch(event.request).then((response) => {
+            if (response && response.status === 200) {
+              const clone = response.clone()
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+            }
+          }).catch(() => {})
+          return cached
+        }
+        // Нет в кеше — загружаем из сети
         return fetch(event.request).then((response) => {
           if (response && response.status === 200) {
             const clone = response.clone()
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
           }
           return response
+        }).catch((err) => {
+          console.error('Failed to fetch critical asset:', event.request.url, err)
+          // Возвращаем пустой ответ вместо ошибки
+          return new Response('', { status: 404, statusText: 'Not Found' })
         })
       })
     )

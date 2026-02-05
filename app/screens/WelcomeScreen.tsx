@@ -20,6 +20,13 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
           loading="eager"
           fetchPriority="high"
+          onError={(e) => {
+            // Fallback: если SVG не загрузился, пробуем PNG
+            const target = e.target as HTMLImageElement
+            if (target.src.endsWith('.svg')) {
+              target.src = '/logo.png'
+            }
+          }}
         />
       </div>
       <h1 className="text-5xl font-bold mb-4 text-light">DARK CLUB</h1>

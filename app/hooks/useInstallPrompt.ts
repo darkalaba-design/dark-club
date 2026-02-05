@@ -53,7 +53,25 @@ export function useInstallPrompt() {
     if (typeof window === 'undefined') return
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {})
+      navigator.serviceWorker
+        .register('/sw.js', { scope: '/' })
+        .then((registration) => {
+          // Проверяем обновления Service Worker
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // Новый Service Worker установлен, можно обновить страницу
+                  console.log('New service worker installed')
+                }
+              })
+            }
+          })
+        })
+        .catch((err) => {
+          console.error('Service Worker registration failed:', err)
+        })
     }
 
     const onBeforeInstallPrompt = (e: Event) => {
