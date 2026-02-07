@@ -38,66 +38,93 @@ export default function Breadcrumbs({
     { num: 4, label: 'Результат', value: hasResult ? 'Готово' : undefined, icon: '📊' }
   ]
 
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const viewportRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [translateX, setTranslateX] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+  const draggingRef = useRef(false)
   const startX = useRef(0)
-  const scrollLeftStart = useRef(0)
+  const startTranslateX = useRef(0)
+  const translateXRef = useRef(0)
+  const pointerIdRef = useRef<number | null>(null)
+  translateXRef.current = translateX
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (!scrollRef.current || (e.target as HTMLElement).closest('button')) return
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return
+    if (!viewportRef.current || !trackRef.current) return
+    const viewport = viewportRef.current
+    const track = trackRef.current
+    const contentWidth = track.offsetWidth
+    const viewportWidth = viewport.clientWidth
+    const maxScroll = Math.max(0, contentWidth - viewportWidth)
     e.preventDefault()
-    startX.current = e.pageX
-    scrollLeftStart.current = scrollRef.current.scrollLeft
+    pointerIdRef.current = e.pointerId
+    draggingRef.current = true
     setIsDragging(true)
+    startX.current = e.clientX
+    startTranslateX.current = translateXRef.current
 
-    const onMove = (moveEvent: MouseEvent) => {
-      if (!scrollRef.current) return
+    const onMove = (moveEvent: PointerEvent) => {
+      if (moveEvent.pointerId !== pointerIdRef.current || !viewportRef.current || !trackRef.current) return
       moveEvent.preventDefault()
-      const deltaX = moveEvent.pageX - startX.current
-      scrollRef.current.scrollLeft = scrollLeftStart.current - deltaX
+      const trackEl = trackRef.current
+      const viewportEl = viewportRef.current
+      const maxScrollCurrent = Math.max(0, (trackEl?.offsetWidth ?? 0) - (viewportEl?.clientWidth ?? 0))
+      const deltaX = moveEvent.clientX - startX.current
+      const raw = startTranslateX.current - deltaX
+      const clamped = Math.max(0, Math.min(maxScrollCurrent, raw))
+      setTranslateX(clamped)
     }
-    const onUp = () => {
-      document.removeEventListener('mousemove', onMove)
-      document.removeEventListener('mouseup', onUp)
+
+    const endDrag = () => {
+      document.removeEventListener('pointermove', onMove)
+      document.removeEventListener('pointerup', onUp)
+      document.removeEventListener('pointercancel', onUp)
+      document.removeEventListener('pointerleave', onLeave)
+      window.removeEventListener('blur', onBlur)
       document.body.style.removeProperty('user-select')
+      pointerIdRef.current = null
+      draggingRef.current = false
       setIsDragging(false)
     }
 
+    const onUp = (upEvent: PointerEvent) => {
+      if (upEvent.pointerId !== pointerIdRef.current) return
+      endDrag()
+    }
+
+    const onLeave = () => {
+      if (!draggingRef.current) return
+      endDrag()
+    }
+
+    const onBlur = () => {
+      if (!draggingRef.current) return
+      endDrag()
+    }
+
     document.body.style.userSelect = 'none'
-    document.addEventListener('mousemove', onMove)
-    document.addEventListener('mouseup', onUp)
+    document.addEventListener('pointermove', onMove)
+    document.addEventListener('pointerup', onUp)
+    document.addEventListener('pointercancel', onUp)
+    document.addEventListener('pointerleave', onLeave)
+    window.addEventListener('blur', onBlur)
   }, [])
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (!scrollRef.current) return
-    setIsDragging(true)
-    startX.current = e.touches[0].pageX
-    scrollLeftStart.current = scrollRef.current.scrollLeft
-  }, [])
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!scrollRef.current) return
-    const deltaX = e.touches[0].pageX - startX.current
-    scrollRef.current.scrollLeft = scrollLeftStart.current - deltaX
-    startX.current = e.touches[0].pageX
-    scrollLeftStart.current = scrollRef.current.scrollLeft
-  }, [])
-
-  const handleTouchEnd = useCallback(() => setIsDragging(false), [])
 
   return (
     <div
-      ref={scrollRef}
+      ref={viewportRef}
       role="region"
       aria-label="Хлебные крошки"
-      className={`mb-6 w-full min-w-0 overflow-x-auto overflow-y-hidden -mx-2 px-2 pb-2 scrollbar-hide select-none touch-pan-x ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-      style={{ WebkitOverflowScrolling: 'touch' }}
-      onMouseDown={handleMouseDown}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      className={`mb-6 w-full min-w-0 overflow-hidden -mx-2 px-2 pb-2 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      style={{ touchAction: 'pan-y' }}
+      onPointerDown={handlePointerDown}
     >
-      <div className="flex items-center gap-2 w-max">
+      <div
+        ref={trackRef}
+        className="flex items-center gap-2 w-max transition-none"
+        style={{ transform: `translateX(${-translateX}px)` }}
+      >
         {steps.map((step, index) => {
           const isCompleted = step.value !== undefined
           const isCurrent = currentStep === step.num
@@ -124,7 +151,7 @@ export default function Breadcrumbs({
           const stepClassName = `
             flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all
             ${isCompleted && !isCurrent
-              ? 'bg-dark-card text-gray-300 cursor-pointer hover-bg-dark-hover'
+              ? 'bg-dark-card text-gray-300 cursor-pointer hover:bg-dark-hover'
               : isCurrent
                 ? 'bg-blue-500-20 text-blue-400'
                 : 'bg-dark-bg text-gray-500 opacity-50'
@@ -137,7 +164,7 @@ export default function Breadcrumbs({
                 <button
                   type="button"
                   onClick={() => onStepClick(step.num)}
-                  onMouseDown={e => e.stopPropagation()}
+                  onPointerDown={e => e.stopPropagation()}
                   className={stepClassName}
                 >
                   {stepContent}

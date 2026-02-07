@@ -6,8 +6,7 @@ import { useAppData, useRecommendations } from '../hooks/useAppData'
 import { useProfiles } from '../hooks/useProfiles'
 import { relationshipTypeToVictimRoleId } from '../data/profiles'
 import StepIndicator from './StepIndicator'
-import Breadcrumbs from './Breadcrumbs'
-import DragTestStrip from './DragTestStrip'
+import BreadcrumbsStrip from './BreadcrumbsStrip'
 import WelcomeScreen from '../screens/WelcomeScreen'
 import Step1Manipulator from '../screens/Step1Manipulator'
 import Step2Victim from '../screens/Step2Victim'
@@ -171,7 +170,7 @@ export default function App() {
             <div className="max-w-6xl w-full mx-auto py-4 md-py-8">
               <div className="mb-6 w-full min-w-0">
                 {state.currentStep >= 1 && state.currentStep <= 4 && (
-                  <Breadcrumbs
+                  <BreadcrumbsStrip
                     manipulatorRole={state.manipulatorRole}
                     victimRole={state.victimRole}
                     targetAction={state.targetAction}
@@ -181,8 +180,6 @@ export default function App() {
                   />
                 )}
               </div>
-
-              {state.currentStep >= 1 && state.currentStep <= 4 && <DragTestStrip />}
 
               {state.currentStep <= 3 && (
                 <StepIndicator currentStep={state.currentStep} totalSteps={3} />
