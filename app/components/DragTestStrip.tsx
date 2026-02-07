@@ -70,7 +70,7 @@ export default function DragTestStrip() {
     updateDebug()
     const el = scrollRef.current
     if (!el) return
-    const ro = new ResizeObserver(updateDebug)
+    const ro = new ResizeObserver(() => updateDebug())
     ro.observe(el)
     return () => ro.disconnect()
   }, [updateDebug])
