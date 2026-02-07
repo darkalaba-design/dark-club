@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useProfiles } from '../hooks/useProfiles'
+import { useSavedScenarios } from '../contexts/SavedScenariosContext'
+import type { SavedScenario } from '../contexts/SavedScenariosContext'
+import DossierLikeContent from '../components/DossierLikeContent'
 import {
   relationshipTypeLabels,
   relationshipTypes,
@@ -38,7 +41,12 @@ interface ProfileDetailScreenProps {
 
 export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetailScreenProps) {
   const { getProfile, updateProfile, deleteProfile } = useProfiles()
+  const { getByProfileId, getById, deleteScenario } = useSavedScenarios()
   const profile = getProfile(profileId)
+  const savedForProfile = getByProfileId(profileId)
+  const hasSavedScenarios = savedForProfile.length > 0
+  const [profileDetailTab, setProfileDetailTab] = useState<'profile' | 'scenarios'>('profile')
+  const [viewingScenarioId, setViewingScenarioId] = useState<string | null>(null)
   const [savedVisible, setSavedVisible] = useState(false)
   const [modal, setModal] = useState<ModalKind>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -165,11 +173,11 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
   }
 
   useEffect(() => {
-    if (modal || showDossierView) {
+    if (modal || showDossierView || viewingScenarioId) {
       document.body.style.overflow = 'hidden'
       return () => { document.body.style.overflow = '' }
     }
-  }, [modal, showDossierView])
+  }, [modal, showDossierView, viewingScenarioId])
 
   // Показывать полоску прогресса после прокрутки на 300px, скрывать при прокрутке наверх
   useEffect(() => {
@@ -239,10 +247,10 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
       </div>
 
       {/* Header */}
-      <div className="bg-dark-card border border-dark rounded-xl p-6 mb-6 shadow-lg">
-        <div className="flex items-start gap-4">
+      <div className="bg-dark-card border border-dark rounded-xl p-6 mb-6 shadow-lg text-center">
+        <div className="flex items-start gap-4 justify-center">
           <span className="text-5xl flex-shrink-0">{profile.avatar}</span>
-          <div className="min-w-0 flex-1 flex flex-col gap-2">
+          <div className="min-w-0 flex-1 flex flex-col gap-2 items-start max-w-md">
             <h1 className="text-2xl font-bold text-light">{profile.name}</h1>
             <span className="inline-block px-2 py-0.5 rounded text-sm text-gray-400">
               {relationshipTypeLabels[profile.relationshipType] ?? profile.relationshipType}
@@ -307,392 +315,437 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
         </div>
       </div>
 
-      {/* Section: Пол и возраст */}
-      <Accordion title="Пол и возраст" icon="👤" defaultOpen={true}>
-        <div className="space-y-6">
-          <div>
-            <h4 className="text-sm font-semibold text-light mb-3">Пол</h4>
-            <div className="flex flex-row gap-3" role="radiogroup" aria-label="Пол">
-              {genderOptions.map(opt => {
-                const selected = profile.gender === opt.id
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => handleUpdate({ gender: opt.id })}
-                    className={`flex-1 flex items-center justify-center gap-3 px-5 py-4 rounded-xl border text-sm font-medium transition-colors ${selected ? 'border-blue-500 bg-blue-500-20 text-light' : 'border-dark bg-dark-bg text-gray-400 hover-border-dark-hover hover-text-light'}`}
-                  >
-                    {opt.icon && <span className="text-xl" aria-hidden>{opt.icon}</span>}
-                    <span>{opt.label}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold text-light mb-3">Возраст</h4>
-            <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Возрастной диапазон">
-              {ageRangeOptions.map(opt => {
-                const selected = profile.age === opt.id
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => handleUpdate({ age: opt.id })}
-                    className={`flex flex-col items-center justify-center gap-1.5 px-4 py-4 rounded-xl border text-center min-h-[72px] transition-colors ${selected ? 'border-blue-500 bg-blue-500-20 text-light' : 'border-dark bg-dark-bg text-gray-400 hover-border-dark-hover hover-text-light'}`}
-                  >
-                    {opt.icon && <span className="text-2xl mb-2" aria-hidden>{opt.icon}</span>}
-                    <span className="text-lg font-semibold">{opt.label}</span>
-                    {opt.subtitle && <span className={`text-xs ${selected ? 'text-gray-400' : 'text-gray-500'}`}>{opt.subtitle}</span>}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+      {/* Вкладки: только если есть сохранённые сценарии */}
+      {hasSavedScenarios && (
+        <div className="flex gap-2 mb-4">
+          <button
+            type="button"
+            onClick={() => setProfileDetailTab('profile')}
+            className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${profileDetailTab === 'profile' ? 'bg-blue-500/20 border border-blue-500 text-blue-300' : 'bg-dark-card border border-dark text-gray-400 hover:text-light'}`}
+          >
+            Профиль
+          </button>
+          <button
+            type="button"
+            onClick={() => setProfileDetailTab('scenarios')}
+            className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-colors ${profileDetailTab === 'scenarios' ? 'bg-blue-500/20 border border-blue-500 text-blue-300' : 'bg-dark-card border border-dark text-gray-400 hover:text-light'}`}
+          >
+            Сценарии
+          </button>
         </div>
-      </Accordion>
+      )}
 
-      {/* Section: Psychotype */}
-      <Accordion title="Структура личности" icon="🧠" defaultOpen={true}>
-        {!psychotype ? (
-          <div>
-            <p className="text-gray-400 mb-3">Психотип не определён</p>
-            <button
-              onClick={() => setModal('psychotype')}
-              className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
-            >
-              Выбрать психотип
-            </button>
-          </div>
-        ) : (
-          <PsychotypeCard
-            psychotype={psychotype}
-            onChange={() => setModal('psychotype')}
-            onRemove={() => handleUpdate({ psychotype: null })}
-          />
-        )}
-      </Accordion>
+      {/* Контент вкладки «Профиль» или всё, если сценариев нет */}
+      {(!hasSavedScenarios || profileDetailTab === 'profile') && (
+        <>
+          {/* Section: Пол и возраст */}
+          <Accordion title="Пол и возраст" icon="👤" defaultOpen={true}>
+            <div className="space-y-6">
+              <div>
+                <h4 className="text-sm font-semibold text-light mb-3">Пол</h4>
+                <div className="flex flex-row gap-3" role="radiogroup" aria-label="Пол">
+                  {genderOptions.map(opt => {
+                    const selected = profile.gender === opt.id
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => handleUpdate({ gender: opt.id })}
+                        className={`flex-1 flex items-center justify-center gap-3 px-5 py-4 rounded-xl border text-sm font-medium transition-colors ${selected ? 'border-blue-500 bg-blue-500-20 text-light' : 'border-dark bg-dark-bg text-gray-400 hover-border-dark-hover hover-text-light'}`}
+                      >
+                        {opt.icon && <span className="text-xl" aria-hidden>{opt.icon}</span>}
+                        <span>{opt.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-light mb-3">Возраст</h4>
+                <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Возрастной диапазон">
+                  {ageRangeOptions.map(opt => {
+                    const selected = profile.age === opt.id
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => handleUpdate({ age: opt.id })}
+                        className={`flex flex-col items-center justify-center gap-1.5 px-4 py-4 rounded-xl border text-center min-h-[72px] transition-colors ${selected ? 'border-blue-500 bg-blue-500-20 text-light' : 'border-dark bg-dark-bg text-gray-400 hover-border-dark-hover hover-text-light'}`}
+                      >
+                        {opt.icon && <span className="text-2xl mb-2" aria-hidden>{opt.icon}</span>}
+                        <span className="text-lg font-semibold">{opt.label}</span>
+                        {opt.subtitle && <span className={`text-xs ${selected ? 'text-gray-400' : 'text-gray-500'}`}>{opt.subtitle}</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          </Accordion>
 
-      {/* Section: Complexes */}
-      <Accordion title="Комплексы" icon="💭" defaultOpen={true}>
-        {profileComplexes.length === 0 ? (
-          <div>
-            <p className="text-gray-400 mb-3">Комплексы не выявлены</p>
-            <button
-              onClick={() => setModal('complex')}
-              className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
-            >
-              Добавить комплекс
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {profileComplexes.map(c => (
-              <ExpandableComplexCard
-                key={c.id}
-                complex={c}
-                onRemove={() => handleUpdate({ complexes: profile.complexes.filter(id => id !== c.id) })}
+          {/* Section: Psychotype */}
+          <Accordion title="Структура личности" icon="🧠" defaultOpen={true}>
+            {!psychotype ? (
+              <div>
+                <p className="text-gray-400 mb-3">Психотип не определён</p>
+                <button
+                  onClick={() => setModal('psychotype')}
+                  className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+                >
+                  Выбрать психотип
+                </button>
+              </div>
+            ) : (
+              <PsychotypeCard
+                psychotype={psychotype}
+                onChange={() => setModal('psychotype')}
+                onRemove={() => handleUpdate({ psychotype: null })}
               />
-            ))}
-            <button
-              onClick={() => setModal('complex')}
-              className="text-sm text-blue-400 hover-underline"
-            >
-              + Добавить ещё комплекс
-            </button>
-          </div>
-        )}
-      </Accordion>
+            )}
+          </Accordion>
 
-      {/* Section: Shadows */}
-      <Accordion title="Тень (вытесненное)" icon="🌑" defaultOpen={true}>
-        {profileShadows.length === 0 ? (
-          <div>
-            <p className="text-gray-400 mb-3">Теневые аспекты не определены</p>
-            <button
-              onClick={() => setModal('shadow')}
-              className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
-            >
-              Добавить теневой аспект
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {profileShadows.map(s => (
-              <ExpandableShadowCard
+          {/* Section: Complexes */}
+          <Accordion title="Комплексы" icon="💭" defaultOpen={true}>
+            {profileComplexes.length === 0 ? (
+              <div>
+                <p className="text-gray-400 mb-3">Комплексы не выявлены</p>
+                <button
+                  onClick={() => setModal('complex')}
+                  className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+                >
+                  Добавить комплекс
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {profileComplexes.map(c => (
+                  <ExpandableComplexCard
+                    key={c.id}
+                    complex={c}
+                    onRemove={() => handleUpdate({ complexes: profile.complexes.filter(id => id !== c.id) })}
+                  />
+                ))}
+                <button
+                  onClick={() => setModal('complex')}
+                  className="text-sm text-blue-400 hover-underline"
+                >
+                  + Добавить ещё комплекс
+                </button>
+              </div>
+            )}
+          </Accordion>
+
+          {/* Section: Shadows */}
+          <Accordion title="Тень (вытесненное)" icon="🌑" defaultOpen={true}>
+            {profileShadows.length === 0 ? (
+              <div>
+                <p className="text-gray-400 mb-3">Теневые аспекты не определены</p>
+                <button
+                  onClick={() => setModal('shadow')}
+                  className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+                >
+                  Добавить теневой аспект
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {profileShadows.map(s => (
+                  <ExpandableShadowCard
+                    key={s.id}
+                    shadow={s}
+                    onRemove={() => handleUpdate({ shadows: profile.shadows.filter(id => id !== s.id) })}
+                  />
+                ))}
+                <button
+                  onClick={() => setModal('shadow')}
+                  className="text-sm text-blue-400 hover-underline"
+                >
+                  + Добавить ещё
+                </button>
+              </div>
+            )}
+          </Accordion>
+
+          {/* Section: Beliefs */}
+          <Accordion title="Убеждения" icon="💬" defaultOpen={true}>
+            {profile.beliefs.length === 0 ? (
+              <div>
+                <p className="text-gray-400 mb-3">Убеждения не указаны</p>
+                <button
+                  onClick={() => setModal('belief')}
+                  className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+                >
+                  Добавить убеждение
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {profile.beliefs.map((b, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
+                    <span className="text-gray-400">{b}</span>
+                    <button
+                      onClick={() => handleUpdate({ beliefs: profile.beliefs.filter((_, j) => j !== i) })}
+                      className="text-gray-500 hover-text-red-400 text-lg leading-none"
+                      aria-label="Удалить"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <div className="pt-4">
+                  <button onClick={() => setModal('belief')} className="text-sm text-blue-400 hover-underline">
+                    + Добавить убеждение
+                  </button>
+                </div>
+              </div>
+            )}
+          </Accordion>
+
+          {/* Section: Values */}
+          <Accordion title="Ценности" icon="⭐" defaultOpen={true}>
+            {profile.values.length === 0 ? (
+              <div>
+                <p className="text-gray-400 mb-3">Ценности не определены</p>
+                <button
+                  onClick={() => setModal('value')}
+                  className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+                >
+                  Добавить ценность
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {profile.values.map((v, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
+                    <span className="text-gray-400">{v}</span>
+                    <button
+                      onClick={() => handleUpdate({ values: profile.values.filter((_, j) => j !== i) })}
+                      className="text-gray-500 hover-text-red-400 text-lg leading-none"
+                      aria-label="Удалить"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <div className="pt-4">
+                  <button onClick={() => setModal('value')} className="text-sm text-blue-400 hover-underline">
+                    + Добавить ценность
+                  </button>
+                </div>
+              </div>
+            )}
+          </Accordion>
+
+          {/* Section: Triggers */}
+          <Accordion title="Триггеры и болевые точки" icon="🎯" defaultOpen={true}>
+            <p className="text-sm text-gray-400 mb-4">
+              Что запускает реакцию: мотивирует или выводит из себя. Персонализирует манипуляцию.
+            </p>
+            <div className="space-y-6">
+              <div>
+                <h4 className="text-sm font-semibold text-light mb-2">Позитивные триггеры (мотивируют, вдохновляют)</h4>
+                {triggersPositive.length === 0 ? (
+                  <p className="text-gray-500 text-sm mb-2">Не указаны</p>
+                ) : (
+                  <div className="space-y-2 mb-2">
+                    {triggersPositive.map((t, i) => (
+                      <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
+                        <span className="text-gray-400">{t}</span>
+                        <button
+                          onClick={() => handleUpdate({ triggersPositive: triggersPositive.filter((_, j) => j !== i) })}
+                          className="text-gray-500 hover-text-red-400 text-lg leading-none"
+                          aria-label="Удалить"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button
+                  onClick={() => setModal('triggersPositive')}
+                  className="text-sm text-blue-400 hover-underline"
+                >
+                  + Добавить позитивный триггер
+                </button>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-light mb-2">Негативные триггеры (выводят из себя, демотивируют)</h4>
+                {triggersNegative.length === 0 ? (
+                  <p className="text-gray-500 text-sm mb-2">Не указаны</p>
+                ) : (
+                  <div className="space-y-2 mb-2">
+                    {triggersNegative.map((t, i) => (
+                      <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
+                        <span className="text-gray-400">{t}</span>
+                        <button
+                          onClick={() => handleUpdate({ triggersNegative: triggersNegative.filter((_, j) => j !== i) })}
+                          className="text-gray-500 hover-text-red-400 text-lg leading-none"
+                          aria-label="Удалить"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button
+                  onClick={() => setModal('triggersNegative')}
+                  className="text-sm text-blue-400 hover-underline"
+                >
+                  + Добавить негативный триггер
+                </button>
+              </div>
+            </div>
+          </Accordion>
+
+          {/* Section: Дополнительные параметры — Коммуникационный стиль */}
+          <Accordion title="Коммуникационный стиль" icon="💬" defaultOpen={false}>
+            <p className="text-sm text-gray-400 mb-4">Как человек общается? Влияет на выбор фраз: прямому говорим прямо, непрямому — через истории.</p>
+            {!profile.communicationStyle ? (
+              <button
+                onClick={() => setModal('communicationStyle')}
+                className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+              >
+                Выбрать стиль
+              </button>
+            ) : (
+              <ParamCard
+                option={communicationStyleOptions.find(o => o.id === profile.communicationStyle)!}
+                onChange={() => setModal('communicationStyle')}
+                onRemove={() => handleUpdate({ communicationStyle: null })}
+              />
+            )}
+          </Accordion>
+
+          {/* Section: Мотивационный профиль */}
+          <Accordion title="Мотивационный профиль (К/От)" icon="🎯" defaultOpen={false}>
+            <p className="text-sm text-gray-400 mb-4">Что его мотивирует? Для точного фрейминга: «К» — «Ты получишь...», «От» — «Ты избежишь...»</p>
+            {!profile.motivationProfile ? (
+              <button
+                onClick={() => setModal('motivationProfile')}
+                className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+              >
+                Выбрать профиль
+              </button>
+            ) : (
+              <ParamCard
+                option={motivationProfileOptions.find(o => o.id === profile.motivationProfile)!}
+                onChange={() => setModal('motivationProfile')}
+                onRemove={() => handleUpdate({ motivationProfile: null })}
+              />
+            )}
+          </Accordion>
+
+          {/* Section: Референция */}
+          <Accordion title="Референция" icon="🧭" defaultOpen={false}>
+            <p className="text-sm text-gray-400 mb-4">На что опирается при решениях? Внутренняя — свой опыт, внешняя — мнение экспертов и других.</p>
+            {!profile.reference ? (
+              <button
+                onClick={() => setModal('reference')}
+                className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+              >
+                Выбрать тип референции
+              </button>
+            ) : (
+              <ParamCard
+                option={referenceOptions.find(o => o.id === profile.reference)!}
+                onChange={() => setModal('reference')}
+                onRemove={() => handleUpdate({ reference: null })}
+              />
+            )}
+          </Accordion>
+
+          {/* Section: Темп принятия решений */}
+          <Accordion title="Темп принятия решений" icon="⏱️" defaultOpen={false}>
+            <p className="text-sm text-gray-400 mb-4">Как быстро принимает решения? Влияет на тактику: импульсивному — дефицит, взвешенному — факты и время, прокрастинатору — дедлайны и малые шаги.</p>
+            {!profile.decisionPace ? (
+              <button
+                onClick={() => setModal('decisionPace')}
+                className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+              >
+                Выбрать темп
+              </button>
+            ) : (
+              <ParamCard
+                option={decisionPaceOptions.find(o => o.id === profile.decisionPace)!}
+                onChange={() => setModal('decisionPace')}
+                onRemove={() => handleUpdate({ decisionPace: null })}
+              />
+            )}
+          </Accordion>
+
+          {/* Section: Болевые точки */}
+          <Accordion title="Болевые точки (текущие проблемы)" icon="🩹" defaultOpen={false}>
+            <p className="text-sm text-gray-400 mb-4">С чем он сейчас борется? Прямая персонализация фраз: если болит «недооценённость», используем лесть и признание.</p>
+            {painPoints.length === 0 ? (
+              <div>
+                <p className="text-gray-400 mb-3">Болевые точки не указаны</p>
+                <button
+                  onClick={() => setModal('painPoints')}
+                  className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
+                >
+                  Добавить болевую точку
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {painPoints.map((p, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
+                    <span className="text-gray-400">{p}</span>
+                    <button
+                      onClick={() => handleUpdate({ painPoints: painPoints.filter((_, j) => j !== i) })}
+                      className="text-gray-500 hover-text-red-400 text-lg leading-none"
+                      aria-label="Удалить"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <div className="pt-4">
+                  <button onClick={() => setModal('painPoints')} className="text-sm text-blue-400 hover-underline">
+                    + Добавить болевую точку
+                  </button>
+                </div>
+              </div>
+            )}
+          </Accordion>
+
+          {/* Section: Notes */}
+          <Accordion title="Свободные заметки" icon="📝" defaultOpen={false}>
+            <textarea
+              value={profile.notes}
+              onChange={e => handleUpdate({ notes: e.target.value })}
+              placeholder="Любые наблюдения, особенности поведения, контекст..."
+              className="w-full min-h-[120px] px-4 py-3 rounded-lg bg-dark-bg border border-dark text-light placeholder-gray-500 resize-y"
+            />
+          </Accordion>
+
+        </>
+      )}
+
+      {/* Контент вкладки «Сценарии» — только при наличии сохранённых */}
+      {hasSavedScenarios && profileDetailTab === 'scenarios' && (
+        <div>
+          <p className="text-sm text-gray-400 mb-4">
+            AI-сценарии, которые вы получали для этого профиля. Доступны офлайн.
+          </p>
+          <div className="grid grid-cols-1 gap-3">
+            {savedForProfile.map(s => (
+              <SavedScenarioCard
                 key={s.id}
-                shadow={s}
-                onRemove={() => handleUpdate({ shadows: profile.shadows.filter(id => id !== s.id) })}
+                scenario={s}
+                onOpen={() => setViewingScenarioId(s.id)}
+                onDelete={() => deleteScenario(s.id)}
               />
             ))}
-            <button
-              onClick={() => setModal('shadow')}
-              className="text-sm text-blue-400 hover-underline"
-            >
-              + Добавить ещё
-            </button>
-          </div>
-        )}
-      </Accordion>
-
-      {/* Section: Beliefs */}
-      <Accordion title="Убеждения" icon="💬" defaultOpen={true}>
-        {profile.beliefs.length === 0 ? (
-          <div>
-            <p className="text-gray-400 mb-3">Убеждения не указаны</p>
-            <button
-              onClick={() => setModal('belief')}
-              className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
-            >
-              Добавить убеждение
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {profile.beliefs.map((b, i) => (
-              <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
-                <span className="text-gray-400">{b}</span>
-                <button
-                  onClick={() => handleUpdate({ beliefs: profile.beliefs.filter((_, j) => j !== i) })}
-                  className="text-gray-500 hover-text-red-400 text-lg leading-none"
-                  aria-label="Удалить"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-            <div className="pt-4">
-              <button onClick={() => setModal('belief')} className="text-sm text-blue-400 hover-underline">
-                + Добавить убеждение
-              </button>
-            </div>
-          </div>
-        )}
-      </Accordion>
-
-      {/* Section: Values */}
-      <Accordion title="Ценности" icon="⭐" defaultOpen={true}>
-        {profile.values.length === 0 ? (
-          <div>
-            <p className="text-gray-400 mb-3">Ценности не определены</p>
-            <button
-              onClick={() => setModal('value')}
-              className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
-            >
-              Добавить ценность
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {profile.values.map((v, i) => (
-              <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
-                <span className="text-gray-400">{v}</span>
-                <button
-                  onClick={() => handleUpdate({ values: profile.values.filter((_, j) => j !== i) })}
-                  className="text-gray-500 hover-text-red-400 text-lg leading-none"
-                  aria-label="Удалить"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-            <div className="pt-4">
-              <button onClick={() => setModal('value')} className="text-sm text-blue-400 hover-underline">
-                + Добавить ценность
-              </button>
-            </div>
-          </div>
-        )}
-      </Accordion>
-
-      {/* Section: Triggers */}
-      <Accordion title="Триггеры и болевые точки" icon="🎯" defaultOpen={true}>
-        <p className="text-sm text-gray-400 mb-4">
-          Что запускает реакцию: мотивирует или выводит из себя. Персонализирует манипуляцию.
-        </p>
-        <div className="space-y-6">
-          <div>
-            <h4 className="text-sm font-semibold text-light mb-2">Позитивные триггеры (мотивируют, вдохновляют)</h4>
-            {triggersPositive.length === 0 ? (
-              <p className="text-gray-500 text-sm mb-2">Не указаны</p>
-            ) : (
-              <div className="space-y-2 mb-2">
-                {triggersPositive.map((t, i) => (
-                  <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
-                    <span className="text-gray-400">{t}</span>
-                    <button
-                      onClick={() => handleUpdate({ triggersPositive: triggersPositive.filter((_, j) => j !== i) })}
-                      className="text-gray-500 hover-text-red-400 text-lg leading-none"
-                      aria-label="Удалить"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <button
-              onClick={() => setModal('triggersPositive')}
-              className="text-sm text-blue-400 hover-underline"
-            >
-              + Добавить позитивный триггер
-            </button>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold text-light mb-2">Негативные триггеры (выводят из себя, демотивируют)</h4>
-            {triggersNegative.length === 0 ? (
-              <p className="text-gray-500 text-sm mb-2">Не указаны</p>
-            ) : (
-              <div className="space-y-2 mb-2">
-                {triggersNegative.map((t, i) => (
-                  <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
-                    <span className="text-gray-400">{t}</span>
-                    <button
-                      onClick={() => handleUpdate({ triggersNegative: triggersNegative.filter((_, j) => j !== i) })}
-                      className="text-gray-500 hover-text-red-400 text-lg leading-none"
-                      aria-label="Удалить"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <button
-              onClick={() => setModal('triggersNegative')}
-              className="text-sm text-blue-400 hover-underline"
-            >
-              + Добавить негативный триггер
-            </button>
           </div>
         </div>
-      </Accordion>
-
-      {/* Section: Дополнительные параметры — Коммуникационный стиль */}
-      <Accordion title="Коммуникационный стиль" icon="💬" defaultOpen={false}>
-        <p className="text-sm text-gray-400 mb-4">Как человек общается? Влияет на выбор фраз: прямому говорим прямо, непрямому — через истории.</p>
-        {!profile.communicationStyle ? (
-          <button
-            onClick={() => setModal('communicationStyle')}
-            className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
-          >
-            Выбрать стиль
-          </button>
-        ) : (
-          <ParamCard
-            option={communicationStyleOptions.find(o => o.id === profile.communicationStyle)!}
-            onChange={() => setModal('communicationStyle')}
-            onRemove={() => handleUpdate({ communicationStyle: null })}
-          />
-        )}
-      </Accordion>
-
-      {/* Section: Мотивационный профиль */}
-      <Accordion title="Мотивационный профиль (К/От)" icon="🎯" defaultOpen={false}>
-        <p className="text-sm text-gray-400 mb-4">Что его мотивирует? Для точного фрейминга: «К» — «Ты получишь...», «От» — «Ты избежишь...»</p>
-        {!profile.motivationProfile ? (
-          <button
-            onClick={() => setModal('motivationProfile')}
-            className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
-          >
-            Выбрать профиль
-          </button>
-        ) : (
-          <ParamCard
-            option={motivationProfileOptions.find(o => o.id === profile.motivationProfile)!}
-            onChange={() => setModal('motivationProfile')}
-            onRemove={() => handleUpdate({ motivationProfile: null })}
-          />
-        )}
-      </Accordion>
-
-      {/* Section: Референция */}
-      <Accordion title="Референция" icon="🧭" defaultOpen={false}>
-        <p className="text-sm text-gray-400 mb-4">На что опирается при решениях? Внутренняя — свой опыт, внешняя — мнение экспертов и других.</p>
-        {!profile.reference ? (
-          <button
-            onClick={() => setModal('reference')}
-            className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
-          >
-            Выбрать тип референции
-          </button>
-        ) : (
-          <ParamCard
-            option={referenceOptions.find(o => o.id === profile.reference)!}
-            onChange={() => setModal('reference')}
-            onRemove={() => handleUpdate({ reference: null })}
-          />
-        )}
-      </Accordion>
-
-      {/* Section: Темп принятия решений */}
-      <Accordion title="Темп принятия решений" icon="⏱️" defaultOpen={false}>
-        <p className="text-sm text-gray-400 mb-4">Как быстро принимает решения? Влияет на тактику: импульсивному — дефицит, взвешенному — факты и время, прокрастинатору — дедлайны и малые шаги.</p>
-        {!profile.decisionPace ? (
-          <button
-            onClick={() => setModal('decisionPace')}
-            className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
-          >
-            Выбрать темп
-          </button>
-        ) : (
-          <ParamCard
-            option={decisionPaceOptions.find(o => o.id === profile.decisionPace)!}
-            onChange={() => setModal('decisionPace')}
-            onRemove={() => handleUpdate({ decisionPace: null })}
-          />
-        )}
-      </Accordion>
-
-      {/* Section: Болевые точки */}
-      <Accordion title="Болевые точки (текущие проблемы)" icon="🩹" defaultOpen={false}>
-        <p className="text-sm text-gray-400 mb-4">С чем он сейчас борется? Прямая персонализация фраз: если болит «недооценённость», используем лесть и признание.</p>
-        {painPoints.length === 0 ? (
-          <div>
-            <p className="text-gray-400 mb-3">Болевые точки не указаны</p>
-            <button
-              onClick={() => setModal('painPoints')}
-              className="px-4 py-2 rounded-lg bg-dark-bg border border-dark text-light hover-bg-dark-hover transition-colors"
-            >
-              Добавить болевую точку
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {painPoints.map((p, i) => (
-              <div key={i} className="flex items-center justify-between gap-2 py-1 px-3 rounded-lg bg-dark-bg border-b border-dark last-border-b-0">
-                <span className="text-gray-400">{p}</span>
-                <button
-                  onClick={() => handleUpdate({ painPoints: painPoints.filter((_, j) => j !== i) })}
-                  className="text-gray-500 hover-text-red-400 text-lg leading-none"
-                  aria-label="Удалить"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-            <div className="pt-4">
-              <button onClick={() => setModal('painPoints')} className="text-sm text-blue-400 hover-underline">
-                + Добавить болевую точку
-              </button>
-            </div>
-          </div>
-        )}
-      </Accordion>
-
-      {/* Section: Notes */}
-      <Accordion title="Свободные заметки" icon="📝" defaultOpen={false}>
-        <textarea
-          value={profile.notes}
-          onChange={e => handleUpdate({ notes: e.target.value })}
-          placeholder="Любые наблюдения, особенности поведения, контекст..."
-          className="w-full min-h-[120px] px-4 py-3 rounded-lg bg-dark-bg border border-dark text-light placeholder-gray-500 resize-y"
-        />
-      </Accordion>
+      )}
 
       {/* Modals */}
       {modal === 'edit' && (
@@ -838,6 +891,39 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
         />
       )}
 
+      {/* Просмотр сохранённого сценария (полноэкранный) */}
+      {viewingScenarioId && (() => {
+        const scenario = getById(viewingScenarioId)
+        if (!scenario) return null
+        return (
+          <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => setViewingScenarioId(null)}
+              className="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover:text-light hover:border-dark-hover transition-colors"
+              aria-label="Закрыть"
+            >
+              <span className="text-xl leading-none" aria-hidden>×</span>
+            </button>
+            <div className="max-w-3xl mx-auto p-6 pt-16">
+              <h2 className="text-xl font-semibold text-light mb-2">
+                {scenario.targetActionTitle ?? 'AI-сценарий'}
+                {scenario.targetActionDetail && (
+                  <span className="text-gray-400 font-normal"> — {scenario.targetActionDetail}</span>
+                )}
+              </h2>
+              <p className="text-sm text-gray-500 mb-4">
+                {scenario.manipulatorRoleTitle && <span>{scenario.manipulatorRoleTitle} · </span>}
+                {new Date(scenario.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </p>
+              <div className="bg-dark-card border border-dark rounded-xl p-6">
+                <DossierLikeContent content={scenario.content} />
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Подтверждение удаления профиля */}
       {showDeleteConfirm && (
         <div
@@ -876,6 +962,57 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function SavedScenarioCard({
+  scenario,
+  onOpen,
+  onDelete
+}: {
+  scenario: SavedScenario
+  onOpen: () => void
+  onDelete: () => void
+}) {
+  const title = scenario.targetActionTitle ?? 'AI-сценарий'
+  const subtitle = [
+    scenario.manipulatorRoleTitle,
+    scenario.targetActionDetail,
+    new Date(scenario.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })
+  ].filter(Boolean).join(' · ')
+  const preview = scenario.content.slice(0, 120).replace(/\n/g, ' ').trim() + (scenario.content.length > 120 ? '…' : '')
+
+  return (
+    <div className="border border-dark rounded-xl p-4 bg-dark-bg hover:border-blue-500/40 transition-colors flex flex-col gap-2">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onOpen}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() } }}
+        className="flex-1 min-w-0 cursor-pointer text-left"
+      >
+        <h4 className="font-medium text-light">{title}</h4>
+        {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+        {preview && <p className="text-sm text-gray-400 mt-2 line-clamp-2">{preview}</p>}
+      </div>
+      <div className="flex items-center justify-between pt-2 border-t border-dark">
+        <button
+          type="button"
+          onClick={onOpen}
+          className="text-sm text-blue-400 hover:text-blue-300"
+        >
+          Открыть
+        </button>
+        <button
+          type="button"
+          onClick={e => { e.stopPropagation(); onDelete() }}
+          className="text-sm text-gray-500 hover:text-red-400"
+          aria-label="Удалить сценарий"
+        >
+          Удалить
+        </button>
+      </div>
     </div>
   )
 }

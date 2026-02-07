@@ -113,7 +113,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-full flex flex-col flex-1">
       {/* Навигация: Главная, Анализ, Профили */}
       <nav className="border-b border-dark bg-dark-bg sticky top-0 z-40 rounded-lg">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
@@ -146,7 +146,7 @@ export default function App() {
 
       {/* Раздел Профили */}
       {state.mainSection === 'profiles' && (
-        <div className="max-w-6xl mx-auto py-4 md-py-8">
+        <div className="max-w-6xl w-full mx-auto py-4 md-py-8">
           {state.profileDetailId ? (
             <ProfileDetailScreen
               profileId={state.profileDetailId}
@@ -167,18 +167,9 @@ export default function App() {
           {state.currentStep === 0 ? (
             <WelcomeScreen onStart={handleStart} />
           ) : (
-            <div className="max-w-6xl mx-auto py-4 md-py-8">
-              <div className="mb-6">
-                {state.currentStep > 1 && state.currentStep < 4 && (
-                  <button
-                    onClick={handleBack}
-                    className="mb-4 flex items-center gap-2 text-gray-400 hover-text-light transition-colors text-sm"
-                  >
-                    <span>←</span>
-                    <span>Назад</span>
-                  </button>
-                )}
-                {state.currentStep <= 3 && (
+            <div className="max-w-6xl w-full mx-auto py-4 md-py-8">
+              <div className="mb-6 w-fit">
+                {state.currentStep >= 1 && state.currentStep <= 4 && (
                   <Breadcrumbs
                     manipulatorRole={state.manipulatorRole}
                     victimRole={state.victimRole}

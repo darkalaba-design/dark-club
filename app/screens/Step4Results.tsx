@@ -19,6 +19,7 @@ import { generateInfluenceScenario, audienceContextToCurrentState } from '../lib
 import type { InfluenceScenario, ScenarioTarget } from '../lib/scenario'
 import { buildScenarioWebhookPayload, sendScenarioToWebhook } from '../lib/scenarioWebhook'
 import { calculateCompleteness } from '../data/profiles'
+import { useSavedScenarios } from '../contexts/SavedScenariosContext'
 
 interface Step4ResultsProps {
   manipulatorRole: string | null
@@ -108,12 +109,20 @@ function extractScenarioFromJsonString(bodyStr: string): string | null {
       continue
     }
     if (c === '"') {
-      // Конец строки в JSON — только если после кавычки идут , или }
+      // Конец строки в JSON — только структурный: " } или " , затем пробелы и " или }
       let j = i + 1
       while (j < trimmed.length && /\s/.test(trimmed[j])) j++
       const after = trimmed[j]
-      if (after === ',' || after === '}' || after === undefined) return sb.join('')
-      // иначе это кавычка внутри текста (например "усилием") — добавляем как есть
+      if (after === '}') return sb.join('')
+      if (after === undefined) return sb.join('')
+      if (after === ',') {
+        let k = j + 1
+        while (k < trimmed.length && /\s/.test(trimmed[k])) k++
+        const afterComma = trimmed[k]
+        // Структурная запятая: после неё идёт " (след. поле) или } или конец
+        if (afterComma === '"' || afterComma === '}' || afterComma === undefined) return sb.join('')
+      }
+      // иначе это кавычка внутри текста ("фраза", чтобы ...) — добавляем как есть
       sb.push(c)
       continue
     }
@@ -223,6 +232,7 @@ export default function Step4Results({
   const [viewMode, setViewMode] = useState<'ai' | 'offline'>('ai')
   const [selectedTechnique, setSelectedTechnique] = useState<Technique | null>(null)
   const appData = useAppData()
+  const { addScenario } = useSavedScenarios()
 
   const manipulator = appData.manipulatorRoles.find(r => r.id === manipulatorRole)
   const victim = appData.victimRoles.find(r => r.id === victimRole)
@@ -296,6 +306,18 @@ export default function Step4Results({
       const res = await sendScenarioToWebhook(payload)
       setAiScenario(res)
       setViewMode('ai')
+      if (selectedProfile) {
+        const content = getScenarioContent(res)
+        if (content != null && content.trim() !== '') {
+          addScenario({
+            profileId: selectedProfile.id,
+            content,
+            manipulatorRoleTitle: manipulator?.title,
+            targetActionTitle: action?.title ?? undefined,
+            targetActionDetail: targetActionDetail ?? undefined
+          })
+        }
+      }
     } catch (err) {
       setAiError(err instanceof Error ? err.message : 'Ошибка загрузки. Проверьте сеть.')
     } finally {

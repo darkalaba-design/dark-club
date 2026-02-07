@@ -42,7 +42,9 @@ export default function RootLayout({
         <link rel="apple-touch-startup-image" href="/splash-1170x2532.png" />
       </head>
       <body>
-        <PWAProvider>{children}</PWAProvider>
+        <div className="app-shell">
+          <PWAProvider>{children}</PWAProvider>
+        </div>
       </body>
     </html>
   )
