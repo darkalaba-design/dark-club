@@ -7,6 +7,7 @@ import { useProfiles } from '../hooks/useProfiles'
 import { relationshipTypeToVictimRoleId } from '../data/profiles'
 import StepIndicator from './StepIndicator'
 import Breadcrumbs from './Breadcrumbs'
+import DragTestStrip from './DragTestStrip'
 import WelcomeScreen from '../screens/WelcomeScreen'
 import Step1Manipulator from '../screens/Step1Manipulator'
 import Step2Victim from '../screens/Step2Victim'
@@ -180,6 +181,8 @@ export default function App() {
                   />
                 )}
               </div>
+
+              {state.currentStep >= 1 && state.currentStep <= 4 && <DragTestStrip />}
 
               {state.currentStep <= 3 && (
                 <StepIndicator currentStep={state.currentStep} totalSteps={3} />
