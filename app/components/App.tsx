@@ -168,7 +168,7 @@ export default function App() {
             <WelcomeScreen onStart={handleStart} />
           ) : (
             <div className="max-w-6xl w-full mx-auto py-4 md-py-8">
-              <div className="mb-6 w-fit">
+              <div className="mb-6 w-full min-w-0">
                 {state.currentStep >= 1 && state.currentStep <= 4 && (
                   <Breadcrumbs
                     manipulatorRole={state.manipulatorRole}

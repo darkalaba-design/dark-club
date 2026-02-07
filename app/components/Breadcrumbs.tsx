@@ -86,18 +86,18 @@ export default function Breadcrumbs({
   const handleTouchEnd = useCallback(() => setIsDragging(false), [])
 
   return (
-    <div className="mb-6 w-full max-w-full min-w-0 overflow-hidden -mx-2 px-2">
-      <div
-        ref={scrollRef}
-        role="region"
-        aria-label="Хлебные крошки"
-        className={`flex items-center gap-2 overflow-x-auto overflow-y-hidden pb-2 scrollbar-hide select-none touch-pan-x w-full min-w-0 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-        style={{ WebkitOverflowScrolling: 'touch' }}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
+    <div
+      ref={scrollRef}
+      role="region"
+      aria-label="Хлебные крошки"
+      className={`mb-6 w-full min-w-0 overflow-x-auto overflow-y-hidden -mx-2 px-2 pb-2 scrollbar-hide select-none touch-pan-x ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      style={{ WebkitOverflowScrolling: 'touch' }}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div className="flex items-center gap-2 w-max">
         {steps.map((step, index) => {
           const isCompleted = step.value !== undefined
           const isCurrent = currentStep === step.num
