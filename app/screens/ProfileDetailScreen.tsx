@@ -339,7 +339,7 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
       {(!hasSavedScenarios || profileDetailTab === 'profile') && (
         <>
           {/* Section: Пол и возраст */}
-          <Accordion title="Пол и возраст" icon="👤" defaultOpen={true}>
+          <Accordion title="Пол и возраст" icon="👤" defaultOpen={false}>
             <div className="space-y-6">
               <div>
                 <h4 className="text-sm font-semibold text-light mb-3">Пол</h4>
@@ -388,7 +388,7 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
           </Accordion>
 
           {/* Section: Psychotype */}
-          <Accordion title="Структура личности" icon="🧠" defaultOpen={true}>
+          <Accordion title="Структура личности" icon="🧠" defaultOpen={false}>
             {!psychotype ? (
               <div>
                 <p className="text-gray-400 mb-3">Психотип не определён</p>
@@ -409,7 +409,7 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
           </Accordion>
 
           {/* Section: Complexes */}
-          <Accordion title="Комплексы" icon="💭" defaultOpen={true}>
+          <Accordion title="Комплексы" icon="💭" defaultOpen={false}>
             {profileComplexes.length === 0 ? (
               <div>
                 <p className="text-gray-400 mb-3">Комплексы не выявлены</p>
@@ -440,7 +440,7 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
           </Accordion>
 
           {/* Section: Shadows */}
-          <Accordion title="Тень (вытесненное)" icon="🌑" defaultOpen={true}>
+          <Accordion title="Тень (вытесненное)" icon="🌑" defaultOpen={false}>
             {profileShadows.length === 0 ? (
               <div>
                 <p className="text-gray-400 mb-3">Теневые аспекты не определены</p>
@@ -471,7 +471,7 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
           </Accordion>
 
           {/* Section: Beliefs */}
-          <Accordion title="Убеждения" icon="💬" defaultOpen={true}>
+          <Accordion title="Убеждения" icon="💬" defaultOpen={false}>
             {profile.beliefs.length === 0 ? (
               <div>
                 <p className="text-gray-400 mb-3">Убеждения не указаны</p>
@@ -506,7 +506,7 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
           </Accordion>
 
           {/* Section: Values */}
-          <Accordion title="Ценности" icon="⭐" defaultOpen={true}>
+          <Accordion title="Ценности" icon="⭐" defaultOpen={false}>
             {profile.values.length === 0 ? (
               <div>
                 <p className="text-gray-400 mb-3">Ценности не определены</p>
@@ -541,7 +541,7 @@ export default function ProfileDetailScreen({ profileId, onBack }: ProfileDetail
           </Accordion>
 
           {/* Section: Triggers */}
-          <Accordion title="Триггеры и болевые точки" icon="🎯" defaultOpen={true}>
+          <Accordion title="Триггеры и болевые точки" icon="🎯" defaultOpen={false}>
             <p className="text-sm text-gray-400 mb-4">
               Что запускает реакцию: мотивирует или выводит из себя. Персонализирует манипуляцию.
             </p>
@@ -1579,6 +1579,20 @@ function ComplexSelectModal({
     [cardWidthPx]
   )
 
+  const handleWheel = useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      const el = scrollRef.current
+      if (!el) return
+      const canScrollLeft = el.scrollLeft > 0
+      const canScrollRight = el.scrollLeft < el.scrollWidth - el.clientWidth - 1
+      if ((e.deltaY > 0 && canScrollRight) || (e.deltaY < 0 && canScrollLeft)) {
+        e.preventDefault()
+        el.scrollLeft += e.deltaY
+      }
+    },
+    []
+  )
+
   return (
     <div className="fixed inset-0 z-50 bg-dark-bg flex flex-col">
       <style>{`.complex-carousel::-webkit-scrollbar { display: none }`}</style>
@@ -1604,12 +1618,15 @@ function ComplexSelectModal({
           aria-label="Карусель комплексов"
           className="complex-carousel flex h-full min-h-[280px] overflow-x-auto overflow-y-hidden snap-x snap-mandatory overscroll-x-contain"
           style={{
+            width: '100%',
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch',
-            scrollSnapType: 'x mandatory'
+            scrollSnapType: 'x mandatory',
+            touchAction: 'pan-x'
           }}
           onScroll={handleScroll}
+          onWheel={handleWheel}
         >
           {complexes.map((c, index) => {
             const selected = selectedIds.includes(c.id)
@@ -1634,17 +1651,19 @@ function ComplexSelectModal({
                       <p className="text-sm text-gray-400 mt-1 break-words">{c.description}</p>
                     </div>
                   </div>
-                  <div className="flex-1 min-h-0 overflow-hidden">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Проявления</p>
-                    <ul className="text-sm text-gray-300 space-y-0.5 list-disc list-inside break-words">
-                      {c.manifestations.map((m, i) => (
-                        <li key={i} className="break-words">{m}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="flex-1 min-h-0 overflow-hidden">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Как использовать</p>
-                    <p className="text-sm text-gray-300 break-words">{c.howToUse}</p>
+                  <div className="flex flex-col gap-3 flex-1 min-h-0 overflow-hidden">
+                    <div className="complex-manifestations-plaque p-4 flex flex-col gap-2 min-w-0">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Проявления</p>
+                      <ul className="text-sm text-gray-300 space-y-0.5 list-disc list-inside break-words">
+                        {c.manifestations.map((m, i) => (
+                          <li key={i} className="break-words">{m}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="complex-howtouse-block p-4 flex flex-col gap-2 min-w-0">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Как использовать</p>
+                      <p className="text-sm text-gray-300 break-words leading-relaxed">{c.howToUse}</p>
+                    </div>
                   </div>
                   <button
                     type="button"

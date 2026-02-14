@@ -46,6 +46,17 @@ body {
   display: none;
 }
 
+/* Карусель комплексов: горизонтальный скролл на всех платформах */
+.complex-carousel {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+}
+.complex-carousel::-webkit-scrollbar {
+  display: none;
+}
+
 @media (min-width: 768px) {
   .md-py-8 {
     padding-top: 2rem;
@@ -422,6 +433,19 @@ html {
 
 .bg-dark-bg {
   background-color: #1a1a1a;
+}
+
+/* Плашка «Проявления» в карточке комплекса — мягкий акцент, в тон карточке */
+.complex-manifestations-plaque {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 0.75rem;
+}
+
+/* Блок «Как использовать» — лёгкий акцент-подсказка, в паре с Проявления */
+.complex-howtouse-block {
+  background-color: rgba(0, 0, 0, 0.18);
+  border-radius: 0.75rem;
+  border-left: 3px solid rgba(34, 197, 94, 0.6);
 }
 
 /* Чуть синеватый фон для кнопок контекста (ненажатое состояние) */
