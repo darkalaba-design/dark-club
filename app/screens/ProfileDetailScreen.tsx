@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react'
 import { useProfiles } from '../hooks/useProfiles'
 import { useSavedScenarios } from '../contexts/SavedScenariosContext'
 import type { SavedScenario } from '../contexts/SavedScenariosContext'
@@ -1523,35 +1523,178 @@ function ComplexSelectModal({
   onClose: () => void
   onToggle: (id: string) => void
 }) {
+  const CARD_GAP = 16
+  const CARD_WIDTH_RATIO = 0.8
+  const viewportRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [viewportWidthPx, setViewportWidthPx] = useState(0)
+  const [translateX, setTranslateX] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isSnapping, setIsSnapping] = useState(false)
+  const draggingRef = useRef(false)
+  const startX = useRef(0)
+  const startTranslateX = useRef(0)
+  const translateXRef = useRef(0)
+  const pointerIdRef = useRef<number | null>(null)
+  translateXRef.current = translateX
+
+  useLayoutEffect(() => {
+    const el = viewportRef.current
+    if (!el) return
+    const update = () => setViewportWidthPx(el.clientWidth)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const cardWidthPx = viewportWidthPx > 0 ? Math.min(Math.round(viewportWidthPx * CARD_WIDTH_RATIO), 400) : undefined
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return
+    if (!viewportRef.current || !trackRef.current) return
+    const viewport = viewportRef.current
+    const track = trackRef.current
+    const contentWidth = track.offsetWidth
+    const viewportWidth = viewport.clientWidth
+    const maxScroll = Math.max(0, contentWidth - viewportWidth)
+    e.preventDefault()
+    pointerIdRef.current = e.pointerId
+    draggingRef.current = true
+    setIsDragging(true)
+    setIsSnapping(false)
+    startX.current = e.clientX
+    startTranslateX.current = translateXRef.current
+
+    const onMove = (moveEvent: PointerEvent) => {
+      if (moveEvent.pointerId !== pointerIdRef.current || !viewportRef.current || !trackRef.current) return
+      moveEvent.preventDefault()
+      const trackEl = trackRef.current
+      const viewportEl = viewportRef.current
+      const maxScrollCurrent = Math.max(0, (trackEl?.offsetWidth ?? 0) - (viewportEl?.clientWidth ?? 0))
+      const deltaX = moveEvent.clientX - startX.current
+      const raw = startTranslateX.current - deltaX
+      const clamped = Math.max(0, Math.min(maxScrollCurrent, raw))
+      setTranslateX(clamped)
+    }
+
+    const endDrag = () => {
+      document.removeEventListener('pointermove', onMove)
+      document.removeEventListener('pointerup', onUp)
+      document.removeEventListener('pointercancel', onUp)
+      document.removeEventListener('pointerleave', onLeave)
+      window.removeEventListener('blur', onBlur)
+      document.body.style.removeProperty('user-select')
+      pointerIdRef.current = null
+      draggingRef.current = false
+      setIsDragging(false)
+      if (!viewportRef.current || !trackRef.current) return
+      const vw = viewportRef.current.clientWidth
+      const firstCard = trackRef.current.querySelector('[data-complex-card]') as HTMLElement | null
+      const cardWidth = firstCard ? firstCard.offsetWidth : vw * CARD_WIDTH_RATIO
+      const slotWidth = cardWidth + CARD_GAP
+      const maxScroll = Math.max(0, trackRef.current.offsetWidth - vw)
+      const current = translateXRef.current
+      const index = Math.round(current / slotWidth)
+      const snapped = Math.max(0, Math.min(maxScroll, index * slotWidth))
+      if (snapped !== current) {
+        setIsSnapping(true)
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => setTranslateX(snapped))
+        })
+        setTimeout(() => setIsSnapping(false), 800)
+      }
+    }
+
+    const onUp = (upEvent: PointerEvent) => {
+      if (upEvent.pointerId !== pointerIdRef.current) return
+      endDrag()
+    }
+
+    const onLeave = () => {
+      if (!draggingRef.current) return
+      endDrag()
+    }
+
+    const onBlur = () => {
+      if (!draggingRef.current) return
+      endDrag()
+    }
+
+    document.body.style.userSelect = 'none'
+    document.addEventListener('pointermove', onMove)
+    document.addEventListener('pointerup', onUp)
+    document.addEventListener('pointercancel', onUp)
+    document.addEventListener('pointerleave', onLeave)
+    window.addEventListener('blur', onBlur)
+  }, [])
+
   return (
-    <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-dark-bg flex flex-col">
       <button
         type="button"
         onClick={onClose}
-        className="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover-text-light hover-border-dark-hover transition-colors"
+        className="fixed top-4 right-4 z-[60] w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover:text-light hover:border-dark-hover transition-colors"
         aria-label="Закрыть"
       >
         <span className="text-xl leading-none" aria-hidden>×</span>
       </button>
-      <div className="p-6 pt-16">
-        <h2 className="text-xl font-semibold text-light mb-4">Добавить комплекс</h2>
-        <div className="grid grid-cols-1 gap-3">
+      <div className="flex-none px-4 pt-2 pb-6" style={{ paddingTop: 8, paddingBottom: 24 }}>
+        <h2 className="text-xl font-semibold text-light">Выбор комплекса</h2>
+        <p className="text-sm text-gray-400 mt-1">Свайпайте влево-вправо</p>
+      </div>
+      <div
+        ref={viewportRef}
+        role="region"
+        aria-label="Карусель комплексов"
+        className={`flex-1 min-h-0 overflow-hidden select-none px-4 pb-6 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        style={{ touchAction: 'pan-y' }}
+        onPointerDown={handlePointerDown}
+      >
+        <div
+          ref={trackRef}
+          className={`flex h-full ${isSnapping ? 'transition-transform duration-[800ms] ease-out' : 'transition-none'}`}
+          style={{ width: 'max-content', gap: CARD_GAP, transform: `translateX(${-translateX}px)` }}
+        >
           {complexes.map(c => {
             const selected = selectedIds.includes(c.id)
             return (
-              <button
+              <div
                 key={c.id}
-                type="button"
-                onClick={() => onToggle(c.id)}
-                className={`text-left p-4 rounded-lg border flex items-center gap-3 transition-colors ${selected ? 'border-blue-500 bg-blue-500-20' : 'border-dark bg-dark-bg hover-bg-dark-hover'}`}
+                data-complex-card
+                className={`flex-shrink-0 min-w-0 max-w-[400px] rounded-xl border border-dark bg-dark-card overflow-y-auto overflow-x-hidden flex flex-col ${cardWidthPx == null ? 'w-4/5' : ''}`}
+                style={{ minHeight: '280px', ...(cardWidthPx != null ? { width: cardWidthPx } : {}) }}
               >
-                <span className="text-2xl">{c.icon}</span>
-                <div className="flex-1 min-w-0 flex flex-col gap-1">
-                  <h4 className="text-base font-medium text-light">{c.title}</h4>
-                  <p className="text-xs text-gray-400 truncate">{c.description}</p>
+                <div className="p-5 flex flex-col gap-3 flex-1 min-w-0 min-h-0 break-words overflow-hidden">
+                  <div className="flex items-start gap-3">
+                    <span className="text-4xl flex-shrink-0">{c.icon}</span>
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <h3 className="text-lg font-semibold text-light leading-tight break-words">{c.title}</h3>
+                      <p className="text-sm text-gray-400 mt-1 break-words">{c.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-hidden">
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Проявления</p>
+                    <ul className="text-sm text-gray-300 space-y-0.5 list-disc list-inside break-words">
+                      {c.manifestations.map((m, i) => (
+                        <li key={i} className="break-words">{m}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-hidden">
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Как использовать</p>
+                    <p className="text-sm text-gray-300 break-words">{c.howToUse}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onPointerDown={e => e.stopPropagation()}
+                    onClick={() => onToggle(c.id)}
+                    className={`mt-2 w-full py-3 px-4 rounded-lg text-sm font-medium transition-colors ${selected ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40' : 'bg-dark-bg text-gray-300 border border-dark hover:bg-dark-hover'}`}
+                  >
+                    {selected ? '✓ В профиле' : 'Добавить в профиль'}
+                  </button>
                 </div>
-                {selected && <span className="text-green-400">✓</span>}
-              </button>
+              </div>
             )
           })}
         </div>
