@@ -1523,11 +1523,11 @@ function ComplexSelectModal({
   onClose: () => void
   onToggle: (id: string) => void
 }) {
-  const CARD_GAP = 16
-  const CARD_WIDTH_RATIO = 0.8
   const viewportRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [viewportWidthPx, setViewportWidthPx] = useState(0)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useLayoutEffect(() => {
     const el = viewportRef.current
@@ -1541,10 +1541,43 @@ function ComplexSelectModal({
 
   const cardWidthPx =
     viewportWidthPx > 0
-      ? Math.min(Math.round(viewportWidthPx * CARD_WIDTH_RATIO), 400)
+      ? viewportWidthPx
       : typeof window !== 'undefined'
-        ? Math.min(400, Math.round(window.innerWidth * CARD_WIDTH_RATIO))
+        ? window.innerWidth
         : 320
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    if (!el || cardWidthPx <= 0) return
+    const onScrollEnd = () => {
+      const index = Math.round(el.scrollLeft / cardWidthPx)
+      setActiveIndex(Math.min(index, complexes.length - 1))
+    }
+    el.addEventListener('scrollend', onScrollEnd)
+    return () => el.removeEventListener('scrollend', onScrollEnd)
+  }, [cardWidthPx])
+
+  const handleScroll = useCallback(() => {
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+    scrollTimeoutRef.current = setTimeout(() => {
+      const el = scrollRef.current
+      if (!el || cardWidthPx <= 0) return
+      const index = Math.round(el.scrollLeft / cardWidthPx)
+      setActiveIndex(Math.min(index, complexes.length - 1))
+      scrollTimeoutRef.current = null
+    }, 50)
+  }, [cardWidthPx])
+
+  const goToIndex = useCallback(
+    (index: number) => {
+      const el = scrollRef.current
+      if (!el) return
+      const i = Math.max(0, Math.min(index, complexes.length - 1))
+      el.scrollTo({ left: i * cardWidthPx, behavior: 'smooth' })
+      setActiveIndex(i)
+    },
+    [cardWidthPx]
+  )
 
   return (
     <div className="fixed inset-0 z-50 bg-dark-bg flex flex-col">
@@ -1557,33 +1590,34 @@ function ComplexSelectModal({
       >
         <span className="text-xl leading-none" aria-hidden>×</span>
       </button>
-      <div className="flex-none px-4 pt-2 pb-6" style={{ paddingTop: 8, paddingBottom: 24 }}>
+      <div className="flex-none px-4 pt-2 pb-2" style={{ paddingTop: 8, paddingBottom: 8 }}>
         <h2 className="text-xl font-semibold text-light">Выбор комплекса</h2>
-        <p className="text-sm text-gray-400 mt-1">Свайпайте влево-вправо</p>
+        <p className="text-sm text-gray-400 mt-1">Свайпайте влево-вправо, как в сторис</p>
       </div>
       <div
         ref={viewportRef}
-        className="flex-1 min-h-[300px] overflow-hidden px-4 pb-6"
+        className="flex-1 min-h-[300px] overflow-hidden px-0"
       >
         <div
           ref={scrollRef}
           role="region"
           aria-label="Карусель комплексов"
-          className="complex-carousel flex h-full min-h-[280px] gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory overscroll-x-contain"
+          className="complex-carousel flex h-full min-h-[280px] overflow-x-auto overflow-y-hidden snap-x snap-mandatory overscroll-x-contain"
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch',
             scrollSnapType: 'x mandatory'
           }}
+          onScroll={handleScroll}
         >
-          {complexes.map(c => {
+          {complexes.map((c, index) => {
             const selected = selectedIds.includes(c.id)
             return (
               <div
                 key={c.id}
                 data-complex-card
-                className="flex-shrink-0 rounded-xl border border-dark bg-dark-card overflow-y-auto overflow-x-hidden flex flex-col snap-start snap-always"
+                className="flex-shrink-0 w-full rounded-none border-x border-dark bg-dark-card overflow-y-auto overflow-x-hidden flex flex-col snap-start snap-always"
                 style={{
                   width: cardWidthPx,
                   minWidth: cardWidthPx,
@@ -1625,6 +1659,27 @@ function ComplexSelectModal({
             )
           })}
         </div>
+      </div>
+      {/* Точки-индикаторы как в Instagram */}
+      <div className="flex-none flex justify-center gap-1.5 py-3 px-4">
+        {complexes.map((_, index) => (
+          <button
+            key={index}
+            type="button"
+            onClick={() => goToIndex(index)}
+            className="rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            aria-label={`Комплекс ${index + 1} из ${complexes.length}`}
+            aria-current={index === activeIndex ? 'true' : undefined}
+          >
+            <span
+              className={`block rounded-full transition-all duration-200 ${
+                index === activeIndex
+                  ? 'w-6 h-2 bg-gray-400'
+                  : 'w-2 h-2 bg-gray-600 hover:bg-gray-500'
+              }`}
+            />
+          </button>
+        ))}
       </div>
     </div>
   )
