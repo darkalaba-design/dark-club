@@ -45,9 +45,8 @@ function pickRandomTip(excludeIds: string[]): DailyTip {
 
 export function useDailyTip() {
   const today = getTodayKey()
-  const [stored, setStored] = useState<StoredTipState | null>(() =>
-    typeof window === 'undefined' ? null : loadStored()
-  )
+  // Always start with null so SSR and first client render match (dailyTips[0]); then sync from localStorage in useEffect
+  const [stored, setStored] = useState<StoredTipState | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -70,9 +69,8 @@ export function useDailyTip() {
   }, [today])
 
   const currentTip = useMemo((): DailyTip => {
-    const s = stored ?? loadStored()
-    if (!s) return dailyTips[0]!
-    const tip = dailyTips.find(t => t.id === s.currentTipId)
+    if (!stored) return dailyTips[0]!
+    const tip = dailyTips.find(t => t.id === stored.currentTipId)
     return tip ?? dailyTips[0]!
   }, [stored])
 
