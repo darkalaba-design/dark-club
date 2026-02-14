@@ -1539,7 +1539,12 @@ function ComplexSelectModal({
     return () => ro.disconnect()
   }, [])
 
-  const cardWidthPx = viewportWidthPx > 0 ? Math.min(Math.round(viewportWidthPx * CARD_WIDTH_RATIO), 400) : undefined
+  const cardWidthPx =
+    viewportWidthPx > 0
+      ? Math.min(Math.round(viewportWidthPx * CARD_WIDTH_RATIO), 400)
+      : typeof window !== 'undefined'
+        ? Math.min(400, Math.round(window.innerWidth * CARD_WIDTH_RATIO))
+        : 320
 
   return (
     <div className="fixed inset-0 z-50 bg-dark-bg flex flex-col">
@@ -1558,13 +1563,13 @@ function ComplexSelectModal({
       </div>
       <div
         ref={viewportRef}
-        className="flex-1 min-h-0 overflow-hidden px-4 pb-6"
+        className="flex-1 min-h-[300px] overflow-hidden px-4 pb-6"
       >
         <div
           ref={scrollRef}
           role="region"
           aria-label="Карусель комплексов"
-          className="complex-carousel flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory overscroll-x-contain"
+          className="complex-carousel flex h-full min-h-[280px] gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory overscroll-x-contain"
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -1578,10 +1583,11 @@ function ComplexSelectModal({
               <div
                 key={c.id}
                 data-complex-card
-                className={`flex-shrink-0 min-w-0 max-w-[400px] rounded-xl border border-dark bg-dark-card overflow-y-auto overflow-x-hidden flex flex-col snap-start snap-always ${cardWidthPx == null ? 'w-4/5' : ''}`}
+                className="flex-shrink-0 rounded-xl border border-dark bg-dark-card overflow-y-auto overflow-x-hidden flex flex-col snap-start snap-always"
                 style={{
+                  width: cardWidthPx,
+                  minWidth: cardWidthPx,
                   minHeight: '280px',
-                  ...(cardWidthPx != null ? { width: cardWidthPx } : {}),
                   scrollSnapAlign: 'start',
                   scrollSnapStop: 'always'
                 }}
