@@ -1528,19 +1528,8 @@ function ComplexSelectModal({
   const [viewportWidthPx, setViewportWidthPx] = useState(0)
   const [activeIndex, setActiveIndex] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
-  const [debug, setDebug] = useState({
-    scrollRefSet: false,
-    wheelTotal: 0,
-    wheelHandled: 0,
-    mousedownTotal: 0,
-    mousedownHandled: 0,
-    lastTargetTag: '',
-    lastInside: false,
-    scrollWidth: 0,
-    clientWidth: 0,
-    scrollLeft: 0
-  })
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wheelSnapRestoreRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const dragStartX = useRef(0)
   const dragStartScrollLeft = useRef(0)
 
@@ -1595,80 +1584,48 @@ function ComplexSelectModal({
   )
 
   useLayoutEffect(() => {
-    let carouselEl: HTMLDivElement | null = null
-    const t = setTimeout(() => {
-      carouselEl = scrollRef.current
-      setDebug(d => ({ ...d, scrollRefSet: !!carouselEl }))
-      if (carouselEl) {
-        setDebug(d => ({
-          ...d,
-          scrollWidth: carouselEl!.scrollWidth,
-          clientWidth: carouselEl!.clientWidth,
-          scrollLeft: carouselEl!.scrollLeft
-        }))
-      }
-    }, 0)
+    const el = scrollRef.current
+    if (el) el.style.scrollSnapType = 'x mandatory'
 
     const onWheel = (e: WheelEvent) => {
       const el = scrollRef.current
-      setDebug(d => ({ ...d, wheelTotal: d.wheelTotal + 1 }))
-      if (!el) {
-        console.log('[carousel] wheel: scrollRef is null')
-        return
-      }
+      if (!el) return
       const inside = el.contains(e.target as Node)
-      setDebug(d => ({
-        ...d,
-        lastTargetTag: (e.target as HTMLElement)?.tagName ?? '',
-        lastInside: inside,
-        scrollWidth: el.scrollWidth,
-        clientWidth: el.clientWidth,
-        scrollLeft: el.scrollLeft
-      }))
       if (!inside) return
       const canScrollLeft = el.scrollLeft > 0
       const canScrollRight = el.scrollLeft < el.scrollWidth - el.clientWidth - 1
       if ((e.deltaY > 0 && canScrollRight) || (e.deltaY < 0 && canScrollLeft)) {
         e.preventDefault()
         e.stopPropagation()
+        if (wheelSnapRestoreRef.current) clearTimeout(wheelSnapRestoreRef.current)
+        el.style.scrollSnapType = 'none'
         el.scrollLeft += e.deltaY
-        setDebug(d => ({ ...d, wheelHandled: d.wheelHandled + 1 }))
-        console.log('[carousel] wheel handled', { deltaY: e.deltaY, scrollLeft: el.scrollLeft })
-      } else {
-        console.log('[carousel] wheel skipped', { canScrollLeft, canScrollRight, deltaY: e.deltaY })
+        wheelSnapRestoreRef.current = setTimeout(() => {
+          el.style.scrollSnapType = 'x mandatory'
+          wheelSnapRestoreRef.current = null
+        }, 350)
       }
     }
 
     const onMouseDown = (e: MouseEvent) => {
       const el = scrollRef.current
-      setDebug(d => ({ ...d, mousedownTotal: d.mousedownTotal + 1 }))
-      if (!el) {
-        console.log('[carousel] mousedown: scrollRef is null')
-        return
-      }
+      if (!el) return
       const inside = el.contains(e.target as Node)
-      const isButton = (e.target as HTMLElement).closest('button')
-      setDebug(d => ({
-        ...d,
-        lastTargetTag: (e.target as HTMLElement)?.tagName ?? '',
-        lastInside: inside
-      }))
       if (!inside) return
-      if (isButton) {
-        console.log('[carousel] mousedown on button, skip')
-        return
-      }
+      if ((e.target as HTMLElement).closest('button')) return
       e.preventDefault()
       e.stopPropagation()
+      el.style.scrollSnapType = 'none'
       dragStartX.current = e.clientX
       dragStartScrollLeft.current = el.scrollLeft
       setIsDragging(true)
-      setDebug(d => ({ ...d, mousedownHandled: d.mousedownHandled + 1 }))
-      console.log('[carousel] mousedown handled, start drag')
       const onMouseMove = (moveEvent: MouseEvent) => {
         const dx = dragStartX.current - moveEvent.clientX
         const next = dragStartScrollLeft.current + dx
-        el.scrollLeft = Math.max(0, Math.min(next, el.scrollWidth - el.clientWidth))
+        const el2 = scrollRef.current
+        if (el2) {
+          el2.scrollLeft = Math.max(0, Math.min(next, el2.scrollWidth - el2.clientWidth))
+        }
       }
       const onMouseUp = () => {
         document.removeEventListener('mousemove', onMouseMove)
@@ -1676,6 +1633,16 @@ function ComplexSelectModal({
         document.body.style.removeProperty('cursor')
         document.body.style.removeProperty('user-select')
         setIsDragging(false)
+        const el2 = scrollRef.current
+        if (el2) {
+          const cardW = el2.clientWidth
+          const index = Math.round(el2.scrollLeft / cardW)
+          const maxIndex = Math.max(0, complexes.length - 1)
+          const snappedIndex = Math.max(0, Math.min(index, maxIndex))
+          const snappedLeft = snappedIndex * cardW
+          el2.style.scrollSnapType = 'x mandatory'
+          el2.scrollTo({ left: snappedLeft, behavior: 'smooth' })
+        }
       }
       document.body.style.cursor = 'grabbing'
       document.body.style.userSelect = 'none'
@@ -1686,7 +1653,7 @@ function ComplexSelectModal({
     document.addEventListener('wheel', onWheel, { capture: true, passive: false })
     document.addEventListener('mousedown', onMouseDown, { capture: true })
     return () => {
-      clearTimeout(t)
+      if (wheelSnapRestoreRef.current) clearTimeout(wheelSnapRestoreRef.current)
       document.removeEventListener('wheel', onWheel, { capture: true })
       document.removeEventListener('mousedown', onMouseDown, { capture: true })
     }
@@ -1704,8 +1671,15 @@ function ComplexSelectModal({
         <span className="text-xl leading-none" aria-hidden>×</span>
       </button>
       <div className="flex-none px-4 pt-2 pb-2" style={{ paddingTop: 8, paddingBottom: 8 }}>
-        <h2 className="text-xl font-semibold text-light">Выбор комплекса</h2>
-        <p className="text-sm text-gray-400 mt-1">Свайпайте влево-вправо, как в сторис</p>
+        <div className="flex items-center justify-between gap-4" style={{ paddingRight: 52 }}>
+          <div>
+            <h2 className="text-xl font-semibold text-light">Выбор комплекса</h2>
+            <p className="text-sm text-gray-400 mt-1">Свайпайте влево-вправо, как в сторис</p>
+          </div>
+          <span className="text-sm text-gray-500 shrink-0" aria-live="polite">
+            {activeIndex + 1} / {complexes.length}
+          </span>
+        </div>
       </div>
       <div
         ref={viewportRef}
@@ -1721,7 +1695,6 @@ function ComplexSelectModal({
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch',
-            scrollSnapType: 'x mandatory',
             touchAction: 'pan-x'
           }}
           onScroll={handleScroll}
@@ -1776,14 +1749,6 @@ function ComplexSelectModal({
             )
           })}
         </div>
-      </div>
-      {/* Отладка: листалка мышью */}
-      <div className="flex-none border-t border-dark bg-dark-card/80 px-3 py-2 text-xs text-gray-400 font-mono">
-        <div>scrollRef: {debug.scrollRefSet ? '✓' : '✗'}</div>
-        <div>wheel: {debug.wheelTotal} (handled: {debug.wheelHandled})</div>
-        <div>mousedown: {debug.mousedownTotal} (handled: {debug.mousedownHandled})</div>
-        <div>last target: {debug.lastTargetTag} inside: {debug.lastInside ? '✓' : '✗'}</div>
-        <div>scroll: {debug.scrollLeft} / {debug.scrollWidth} (client: {debug.clientWidth})</div>
       </div>
       {/* Слайдер из 5 точек: активная по центру/у края, остальные по удалённости */}
       {(() => {
