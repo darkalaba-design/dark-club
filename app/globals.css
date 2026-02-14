@@ -37,6 +37,28 @@ body {
   }
 }
 
+/* Нижнее меню в стиле приложений: иконка + подпись, всегда внизу экрана (z ниже модалок) */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  background: var(--dark-bg, #0f0f0f);
+  border-top: 1px solid var(--dark-border, #1f1f1f);
+  padding-top: 0.5rem;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* Отступ контента, чтобы не уходить под нижнее меню */
+.pb-bottom-nav {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -54,12 +76,15 @@ body {
   touch-action: pan-x;
   cursor: grab;
 }
+
 .complex-carousel:active {
   cursor: grabbing;
 }
+
 .complex-carousel button {
   cursor: pointer;
 }
+
 .complex-carousel::-webkit-scrollbar {
   display: none;
 }

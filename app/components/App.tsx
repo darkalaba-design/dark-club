@@ -112,38 +112,12 @@ export default function App() {
     setTimeout(() => nextStep(), 300)
   }
 
-  return (
-    <div className="min-h-full flex flex-col flex-1">
-      {/* Навигация: Главная, Анализ, Профили */}
-      <nav className="border-b border-dark bg-dark-bg sticky top-0 z-40 rounded-lg">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
-          <button
-            type="button"
-            style={{ backgroundColor: 'unset', background: 'unset', border: 'none', borderWidth: 0, borderColor: 'transparent', borderStyle: 'none', borderImage: 'none' }}
-            onClick={() => { setMainSection('analysis'); goToStep(0) }}
-            className={`bg-transparent border-0 border-none border-transparent text-sm font-medium transition-colors ${state.mainSection === 'analysis' && state.currentStep === 0 ? 'text-blue-400' : 'text-gray-400 hover-text-light'}`}
-          >
-            🏠 Главная
-          </button>
-          <button
-            type="button"
-            style={{ backgroundColor: 'unset', background: 'unset', border: 'none', borderWidth: 0, borderColor: 'transparent', borderStyle: 'none', borderImage: 'none' }}
-            onClick={() => { setMainSection('analysis'); goToStep(1) }}
-            className={`bg-transparent border-0 border-none border-transparent text-sm font-medium transition-colors ${state.mainSection === 'analysis' && state.currentStep > 0 ? 'text-blue-400' : 'text-gray-400 hover-text-light'}`}
-          >
-            🎭 Анализ
-          </button>
-          <button
-            type="button"
-            style={{ backgroundColor: 'unset', background: 'unset', border: 'none', borderWidth: 0, borderColor: 'transparent', borderStyle: 'none', borderImage: 'none' }}
-            onClick={() => { setMainSection('profiles'); setProfileDetailId(null) }}
-            className={`bg-transparent border-0 border-none border-transparent text-sm font-medium transition-colors ${state.mainSection === 'profiles' ? 'text-blue-400' : 'text-gray-400 hover-text-light'}`}
-          >
-            👥 Профили
-          </button>
-        </div>
-      </nav>
+  const isHome = state.mainSection === 'analysis' && state.currentStep === 0
+  const isAnalysis = state.mainSection === 'analysis' && state.currentStep > 0
+  const isProfiles = state.mainSection === 'profiles'
 
+  return (
+    <div className="min-h-full flex flex-col flex-1 pb-bottom-nav">
       {/* Раздел Профили */}
       {state.mainSection === 'profiles' && (
         <div className="max-w-6xl w-full mx-auto py-4 md-py-8">
@@ -165,7 +139,10 @@ export default function App() {
       {state.mainSection === 'analysis' && (
         <>
           {state.currentStep === 0 ? (
-            <WelcomeScreen onStart={handleStart} />
+            <WelcomeScreen
+              onStart={handleStart}
+              onShowAllScenarios={() => { setMainSection('profiles'); setProfileDetailId(null) }}
+            />
           ) : (
             <div className="max-w-6xl w-full mx-auto py-4 md-py-8">
               <div className="mb-6 w-full min-w-0">
@@ -230,6 +207,37 @@ export default function App() {
           )}
         </>
       )}
+
+      {/* Нижнее меню: иконка + подпись, как в приложениях */}
+      <nav className="bottom-nav bg-dark-bg border-t border-dark" aria-label="Нижняя навигация">
+        <button
+          type="button"
+          onClick={() => { setMainSection('analysis'); goToStep(0) }}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 px-1 min-w-0 text-xs font-medium transition-colors border-0 bg-transparent rounded-none ${isHome ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}
+          aria-current={isHome ? 'page' : undefined}
+        >
+          <span className="text-xl leading-none" aria-hidden>🏠</span>
+          <span>Главная</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => { setMainSection('analysis'); goToStep(1) }}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 px-1 min-w-0 text-xs font-medium transition-colors border-0 bg-transparent rounded-none ${isAnalysis ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}
+          aria-current={isAnalysis ? 'page' : undefined}
+        >
+          <span className="text-xl leading-none" aria-hidden>🎭</span>
+          <span>Анализ</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => { setMainSection('profiles'); setProfileDetailId(null) }}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 px-1 min-w-0 text-xs font-medium transition-colors border-0 bg-transparent rounded-none ${isProfiles ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}
+          aria-current={isProfiles ? 'page' : undefined}
+        >
+          <span className="text-xl leading-none" aria-hidden>👥</span>
+          <span>Профили</span>
+        </button>
+      </nav>
     </div>
   )
 }
