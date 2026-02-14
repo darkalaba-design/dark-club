@@ -1526,17 +1526,8 @@ function ComplexSelectModal({
   const CARD_GAP = 16
   const CARD_WIDTH_RATIO = 0.8
   const viewportRef = useRef<HTMLDivElement>(null)
-  const trackRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const [viewportWidthPx, setViewportWidthPx] = useState(0)
-  const [translateX, setTranslateX] = useState(0)
-  const [isDragging, setIsDragging] = useState(false)
-  const [isSnapping, setIsSnapping] = useState(false)
-  const draggingRef = useRef(false)
-  const startX = useRef(0)
-  const startTranslateX = useRef(0)
-  const translateXRef = useRef(0)
-  const pointerIdRef = useRef<number | null>(null)
-  translateXRef.current = translateX
 
   useLayoutEffect(() => {
     const el = viewportRef.current
@@ -1550,87 +1541,9 @@ function ComplexSelectModal({
 
   const cardWidthPx = viewportWidthPx > 0 ? Math.min(Math.round(viewportWidthPx * CARD_WIDTH_RATIO), 400) : undefined
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if ((e.target as HTMLElement).closest('button')) return
-    if (!viewportRef.current || !trackRef.current) return
-    const viewport = viewportRef.current
-    const track = trackRef.current
-    const contentWidth = track.offsetWidth
-    const viewportWidth = viewport.clientWidth
-    const maxScroll = Math.max(0, contentWidth - viewportWidth)
-    e.preventDefault()
-    pointerIdRef.current = e.pointerId
-    draggingRef.current = true
-    setIsDragging(true)
-    setIsSnapping(false)
-    startX.current = e.clientX
-    startTranslateX.current = translateXRef.current
-
-    const onMove = (moveEvent: PointerEvent) => {
-      if (moveEvent.pointerId !== pointerIdRef.current || !viewportRef.current || !trackRef.current) return
-      moveEvent.preventDefault()
-      const trackEl = trackRef.current
-      const viewportEl = viewportRef.current
-      const maxScrollCurrent = Math.max(0, (trackEl?.offsetWidth ?? 0) - (viewportEl?.clientWidth ?? 0))
-      const deltaX = moveEvent.clientX - startX.current
-      const raw = startTranslateX.current - deltaX
-      const clamped = Math.max(0, Math.min(maxScrollCurrent, raw))
-      setTranslateX(clamped)
-    }
-
-    const endDrag = () => {
-      document.removeEventListener('pointermove', onMove)
-      document.removeEventListener('pointerup', onUp)
-      document.removeEventListener('pointercancel', onUp)
-      document.removeEventListener('pointerleave', onLeave)
-      window.removeEventListener('blur', onBlur)
-      document.body.style.removeProperty('user-select')
-      pointerIdRef.current = null
-      draggingRef.current = false
-      setIsDragging(false)
-      if (!viewportRef.current || !trackRef.current) return
-      const vw = viewportRef.current.clientWidth
-      const firstCard = trackRef.current.querySelector('[data-complex-card]') as HTMLElement | null
-      const cardWidth = firstCard ? firstCard.offsetWidth : vw * CARD_WIDTH_RATIO
-      const slotWidth = cardWidth + CARD_GAP
-      const maxScroll = Math.max(0, trackRef.current.offsetWidth - vw)
-      const current = translateXRef.current
-      const index = Math.round(current / slotWidth)
-      const snapped = Math.max(0, Math.min(maxScroll, index * slotWidth))
-      if (snapped !== current) {
-        setIsSnapping(true)
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => setTranslateX(snapped))
-        })
-        setTimeout(() => setIsSnapping(false), 800)
-      }
-    }
-
-    const onUp = (upEvent: PointerEvent) => {
-      if (upEvent.pointerId !== pointerIdRef.current) return
-      endDrag()
-    }
-
-    const onLeave = () => {
-      if (!draggingRef.current) return
-      endDrag()
-    }
-
-    const onBlur = () => {
-      if (!draggingRef.current) return
-      endDrag()
-    }
-
-    document.body.style.userSelect = 'none'
-    document.addEventListener('pointermove', onMove)
-    document.addEventListener('pointerup', onUp)
-    document.addEventListener('pointercancel', onUp)
-    document.addEventListener('pointerleave', onLeave)
-    window.addEventListener('blur', onBlur)
-  }, [])
-
   return (
     <div className="fixed inset-0 z-50 bg-dark-bg flex flex-col">
+      <style>{`.complex-carousel::-webkit-scrollbar { display: none }`}</style>
       <button
         type="button"
         onClick={onClose}
@@ -1645,16 +1558,19 @@ function ComplexSelectModal({
       </div>
       <div
         ref={viewportRef}
-        role="region"
-        aria-label="Карусель комплексов"
-        className={`flex-1 min-h-0 overflow-hidden select-none px-4 pb-6 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-        style={{ touchAction: 'pan-y' }}
-        onPointerDown={handlePointerDown}
+        className="flex-1 min-h-0 overflow-hidden px-4 pb-6"
       >
         <div
-          ref={trackRef}
-          className={`flex h-full ${isSnapping ? 'transition-transform duration-[800ms] ease-out' : 'transition-none'}`}
-          style={{ width: 'max-content', gap: CARD_GAP, transform: `translateX(${-translateX}px)` }}
+          ref={scrollRef}
+          role="region"
+          aria-label="Карусель комплексов"
+          className="complex-carousel flex h-full gap-4 overflow-x-auto overflow-y-hidden snap-x snap-mandatory overscroll-x-contain"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch',
+            scrollSnapType: 'x mandatory'
+          }}
         >
           {complexes.map(c => {
             const selected = selectedIds.includes(c.id)
@@ -1662,8 +1578,13 @@ function ComplexSelectModal({
               <div
                 key={c.id}
                 data-complex-card
-                className={`flex-shrink-0 min-w-0 max-w-[400px] rounded-xl border border-dark bg-dark-card overflow-y-auto overflow-x-hidden flex flex-col ${cardWidthPx == null ? 'w-4/5' : ''}`}
-                style={{ minHeight: '280px', ...(cardWidthPx != null ? { width: cardWidthPx } : {}) }}
+                className={`flex-shrink-0 min-w-0 max-w-[400px] rounded-xl border border-dark bg-dark-card overflow-y-auto overflow-x-hidden flex flex-col snap-start snap-always ${cardWidthPx == null ? 'w-4/5' : ''}`}
+                style={{
+                  minHeight: '280px',
+                  ...(cardWidthPx != null ? { width: cardWidthPx } : {}),
+                  scrollSnapAlign: 'start',
+                  scrollSnapStop: 'always'
+                }}
               >
                 <div className="p-5 flex flex-col gap-3 flex-1 min-w-0 min-h-0 break-words overflow-hidden">
                   <div className="flex items-start gap-3">
