@@ -1527,7 +1527,22 @@ function ComplexSelectModal({
   const scrollRef = useRef<HTMLDivElement>(null)
   const [viewportWidthPx, setViewportWidthPx] = useState(0)
   const [activeIndex, setActiveIndex] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [debug, setDebug] = useState({
+    scrollRefSet: false,
+    wheelTotal: 0,
+    wheelHandled: 0,
+    mousedownTotal: 0,
+    mousedownHandled: 0,
+    lastTargetTag: '',
+    lastInside: false,
+    scrollWidth: 0,
+    clientWidth: 0,
+    scrollLeft: 0
+  })
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const dragStartX = useRef(0)
+  const dragStartScrollLeft = useRef(0)
 
   useLayoutEffect(() => {
     const el = viewportRef.current
@@ -1579,19 +1594,103 @@ function ComplexSelectModal({
     [cardWidthPx]
   )
 
-  const handleWheel = useCallback(
-    (e: React.WheelEvent<HTMLDivElement>) => {
+  useLayoutEffect(() => {
+    let carouselEl: HTMLDivElement | null = null
+    const t = setTimeout(() => {
+      carouselEl = scrollRef.current
+      setDebug(d => ({ ...d, scrollRefSet: !!carouselEl }))
+      if (carouselEl) {
+        setDebug(d => ({
+          ...d,
+          scrollWidth: carouselEl!.scrollWidth,
+          clientWidth: carouselEl!.clientWidth,
+          scrollLeft: carouselEl!.scrollLeft
+        }))
+      }
+    }, 0)
+
+    const onWheel = (e: WheelEvent) => {
       const el = scrollRef.current
-      if (!el) return
+      setDebug(d => ({ ...d, wheelTotal: d.wheelTotal + 1 }))
+      if (!el) {
+        console.log('[carousel] wheel: scrollRef is null')
+        return
+      }
+      const inside = el.contains(e.target as Node)
+      setDebug(d => ({
+        ...d,
+        lastTargetTag: (e.target as HTMLElement)?.tagName ?? '',
+        lastInside: inside,
+        scrollWidth: el.scrollWidth,
+        clientWidth: el.clientWidth,
+        scrollLeft: el.scrollLeft
+      }))
+      if (!inside) return
       const canScrollLeft = el.scrollLeft > 0
       const canScrollRight = el.scrollLeft < el.scrollWidth - el.clientWidth - 1
       if ((e.deltaY > 0 && canScrollRight) || (e.deltaY < 0 && canScrollLeft)) {
         e.preventDefault()
+        e.stopPropagation()
         el.scrollLeft += e.deltaY
+        setDebug(d => ({ ...d, wheelHandled: d.wheelHandled + 1 }))
+        console.log('[carousel] wheel handled', { deltaY: e.deltaY, scrollLeft: el.scrollLeft })
+      } else {
+        console.log('[carousel] wheel skipped', { canScrollLeft, canScrollRight, deltaY: e.deltaY })
       }
-    },
-    []
-  )
+    }
+
+    const onMouseDown = (e: MouseEvent) => {
+      const el = scrollRef.current
+      setDebug(d => ({ ...d, mousedownTotal: d.mousedownTotal + 1 }))
+      if (!el) {
+        console.log('[carousel] mousedown: scrollRef is null')
+        return
+      }
+      const inside = el.contains(e.target as Node)
+      const isButton = (e.target as HTMLElement).closest('button')
+      setDebug(d => ({
+        ...d,
+        lastTargetTag: (e.target as HTMLElement)?.tagName ?? '',
+        lastInside: inside
+      }))
+      if (!inside) return
+      if (isButton) {
+        console.log('[carousel] mousedown on button, skip')
+        return
+      }
+      e.preventDefault()
+      e.stopPropagation()
+      dragStartX.current = e.clientX
+      dragStartScrollLeft.current = el.scrollLeft
+      setIsDragging(true)
+      setDebug(d => ({ ...d, mousedownHandled: d.mousedownHandled + 1 }))
+      console.log('[carousel] mousedown handled, start drag')
+      const onMouseMove = (moveEvent: MouseEvent) => {
+        const dx = dragStartX.current - moveEvent.clientX
+        const next = dragStartScrollLeft.current + dx
+        el.scrollLeft = Math.max(0, Math.min(next, el.scrollWidth - el.clientWidth))
+      }
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove)
+        document.removeEventListener('mouseup', onMouseUp)
+        document.body.style.removeProperty('cursor')
+        document.body.style.removeProperty('user-select')
+        setIsDragging(false)
+      }
+      document.body.style.cursor = 'grabbing'
+      document.body.style.userSelect = 'none'
+      document.addEventListener('mousemove', onMouseMove)
+      document.addEventListener('mouseup', onMouseUp)
+    }
+
+    document.addEventListener('wheel', onWheel, { capture: true, passive: false })
+    document.addEventListener('mousedown', onMouseDown, { capture: true })
+    return () => {
+      clearTimeout(t)
+      document.removeEventListener('wheel', onWheel, { capture: true })
+      document.removeEventListener('mousedown', onMouseDown, { capture: true })
+    }
+  }, [])
 
   return (
     <div className="fixed inset-0 z-50 bg-dark-bg flex flex-col">
@@ -1616,7 +1715,7 @@ function ComplexSelectModal({
           ref={scrollRef}
           role="region"
           aria-label="Карусель комплексов"
-          className="complex-carousel flex h-full min-h-[280px] overflow-x-auto overflow-y-hidden snap-x snap-mandatory overscroll-x-contain"
+          className={`complex-carousel flex h-full min-h-[280px] overflow-x-auto overflow-y-hidden snap-x snap-mandatory overscroll-x-contain ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           style={{
             width: '100%',
             scrollbarWidth: 'none',
@@ -1626,7 +1725,6 @@ function ComplexSelectModal({
             touchAction: 'pan-x'
           }}
           onScroll={handleScroll}
-          onWheel={handleWheel}
         >
           {complexes.map((c, index) => {
             const selected = selectedIds.includes(c.id)
@@ -1679,27 +1777,61 @@ function ComplexSelectModal({
           })}
         </div>
       </div>
-      {/* Точки-индикаторы как в Instagram */}
-      <div className="flex-none flex justify-center gap-1.5 py-3 px-4">
-        {complexes.map((_, index) => (
-          <button
-            key={index}
-            type="button"
-            onClick={() => goToIndex(index)}
-            className="rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-            aria-label={`Комплекс ${index + 1} из ${complexes.length}`}
-            aria-current={index === activeIndex ? 'true' : undefined}
-          >
-            <span
-              className={`block rounded-full transition-all duration-200 ${
-                index === activeIndex
-                  ? 'w-6 h-2 bg-gray-400'
-                  : 'w-2 h-2 bg-gray-600 hover:bg-gray-500'
-              }`}
-            />
-          </button>
-        ))}
+      {/* Отладка: листалка мышью */}
+      <div className="flex-none border-t border-dark bg-dark-card/80 px-3 py-2 text-xs text-gray-400 font-mono">
+        <div>scrollRef: {debug.scrollRefSet ? '✓' : '✗'}</div>
+        <div>wheel: {debug.wheelTotal} (handled: {debug.wheelHandled})</div>
+        <div>mousedown: {debug.mousedownTotal} (handled: {debug.mousedownHandled})</div>
+        <div>last target: {debug.lastTargetTag} inside: {debug.lastInside ? '✓' : '✗'}</div>
+        <div>scroll: {debug.scrollLeft} / {debug.scrollWidth} (client: {debug.clientWidth})</div>
       </div>
+      {/* Слайдер из 5 точек: активная по центру/у края, остальные по удалённости */}
+      {(() => {
+        const total = complexes.length
+        const windowSize = 5
+        const start =
+          total <= windowSize
+            ? 0
+            : Math.max(0, Math.min(activeIndex - 2, total - windowSize))
+        const indices =
+          total <= windowSize
+            ? Array.from({ length: total }, (_, i) => i)
+            : Array.from({ length: windowSize }, (_, i) => start + i)
+        return (
+          <div className="flex-none flex justify-center gap-2 py-3 px-4">
+            {indices.map(index => {
+              const distance = Math.abs(index - activeIndex)
+              const isActive = index === activeIndex
+              const width = distance === 0 ? 16 : distance === 1 ? 10 : 6
+              const height = distance === 0 ? 6 : distance === 1 ? 6 : 6
+              const backgroundColor = isActive
+                ? '#3b82f6'
+                : distance === 1
+                  ? '#6b7280'
+                  : 'rgba(107, 114, 128, 0.5)'
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => goToIndex(index)}
+                  className="shrink-0 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  aria-label={`Комплекс ${index + 1} из ${total}`}
+                  aria-current={isActive ? 'true' : undefined}
+                >
+                  <span
+                    className="block rounded-full transition-all duration-200"
+                    style={{
+                      width: `${width}px`,
+                      height: `${height}px`,
+                      backgroundColor
+                    }}
+                  />
+                </button>
+              )
+            })}
+          </div>
+        )
+      })()}
     </div>
   )
 }

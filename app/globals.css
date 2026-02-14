@@ -52,6 +52,13 @@ body {
   overflow-y: hidden !important;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x;
+  cursor: grab;
+}
+.complex-carousel:active {
+  cursor: grabbing;
+}
+.complex-carousel button {
+  cursor: pointer;
 }
 .complex-carousel::-webkit-scrollbar {
   display: none;
