@@ -74,30 +74,36 @@ export default function ActiveScenarios({ onStartAnalysis, onShowAllScenarios }:
             const title = scenario.targetActionTitle ?? 'Сценарий'
             const detail = scenario.targetActionDetail ?? ''
             return (
-              <div
+              <button
                 key={scenario.id}
-                className="rounded-xl border border-dark bg-dark-card p-4 flex flex-col gap-2"
+                type="button"
+                onClick={() => setViewingId(scenario.id)}
+                className="w-full text-left rounded-xl border border-blue-500/30 bg-dark-card-selected p-4 flex flex-col gap-2 cursor-pointer hover:border-blue-500/50 hover:bg-dark-card-selected/90 transition-colors"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-light truncate">{profileName}</p>
-                    <p className="text-sm text-gray-400 truncate">
+                  <div className="min-w-0 flex-1 flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl flex-shrink-0 opacity-80" aria-hidden>
+                        {profile?.avatar ?? '👤'}
+                      </span>
+                      <p className="font-medium text-blue-200/70 truncate">{profileName}</p>
+                    </div>
+                    <p className="text-sm text-blue-300/90 truncate">
                       {title}
                       {detail ? ` — ${detail}` : ''}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-blue-400/40 mt-1">
                       Создано {formatDate(scenario.createdAt)}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setViewingId(scenario.id)}
-                    className="flex-shrink-0 text-sm text-blue-400 hover:text-blue-300 transition-colors"
-                  >
-                    Открыть сценарий
-                  </button>
+                  <span className="flex-shrink-0 text-blue-400/80" aria-hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400/80">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </span>
                 </div>
-              </div>
+              </button>
             )
           })}
           {hasMore && onShowAllScenarios && (

@@ -45,9 +45,8 @@ function pickRandomChallenge(completedIds: string[]): DailyChallenge {
 
 export function useDailyChallenge() {
   const today = getTodayKey()
-  const [stored, setStored] = useState<StoredChallengeState | null>(() =>
-    typeof window === 'undefined' ? null : loadStored()
-  )
+  // Always start with null so SSR and first client render match (challenges[0]); then sync from localStorage in useEffect
+  const [stored, setStored] = useState<StoredChallengeState | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -68,9 +67,8 @@ export function useDailyChallenge() {
   }, [today])
 
   const currentChallenge = useMemo((): DailyChallenge => {
-    const s = stored ?? loadStored()
-    if (!s) return challenges[0]!
-    const c = challenges.find(ch => ch.id === s.currentChallengeId)
+    if (!stored) return challenges[0]!
+    const c = challenges.find(ch => ch.id === stored.currentChallengeId)
     return c ?? challenges[0]!
   }, [stored])
 
