@@ -83,21 +83,21 @@ export default function ActiveScenarios({ onStartAnalysis, onShowAllScenarios }:
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1 flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl flex-shrink-0 opacity-80" aria-hidden>
+                      <span className="text-lg flex-shrink-0 opacity-80" aria-hidden>
                         {profile?.avatar ?? '👤'}
                       </span>
-                      <p className="font-medium text-blue-200/70 truncate">{profileName}</p>
+                      <p className="font-bold text-gray-400 truncate">{profileName}</p>
                     </div>
                     <p className="text-sm text-blue-300/90 truncate">
                       {title}
                       {detail ? ` — ${detail}` : ''}
                     </p>
-                    <p className="text-xs text-blue-400/40 mt-1">
+                    <p className="text-xs text-gray-500 mt-1">
                       Создано {formatDate(scenario.createdAt)}
                     </p>
                   </div>
-                  <span className="flex-shrink-0 text-blue-400/80" aria-hidden>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400/80">
+                  <span className="flex-shrink-0 text-gray-500" aria-hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
