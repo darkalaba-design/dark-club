@@ -340,6 +340,11 @@ html {
   padding-bottom: 2rem;
 }
 
+.py-12 {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
 .pt-4 {
   padding-top: 1rem;
 }
@@ -545,6 +550,10 @@ html {
   background-color: rgba(0, 0, 0, 0.7);
 }
 
+.bg-black-80 {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
 .text-light {
   color: #e0e0e0;
 }
@@ -746,6 +755,10 @@ html {
 
 .z-50 {
   z-index: 50;
+}
+
+.z-modal-overlay {
+  z-index: 9999;
 }
 
 .top-4 {

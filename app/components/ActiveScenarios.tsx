@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { useSavedScenarios } from '../contexts/SavedScenariosContext'
 import { useProfiles } from '../hooks/useProfiles'
 import DossierLikeContent from './DossierLikeContent'
@@ -53,7 +54,7 @@ export default function ActiveScenarios({ onStartAnalysis, onShowAllScenarios }:
       </h2>
 
       {recentScenarios.length === 0 ? (
-        <div className="rounded-xl border border-dark bg-dark-card p-8 text-center">
+        <div className="rounded-xl border border-dark bg-dark-card px-8 py-12 text-center">
           <span className="text-5xl block mb-4" aria-hidden>📋</span>
           <p className="text-gray-400 mb-4">
             У вас пока нет сохранённых сценариев. Создайте первый!
@@ -118,9 +119,9 @@ export default function ActiveScenarios({ onStartAnalysis, onShowAllScenarios }:
         </div>
       )}
 
-      {/* Модальное окно просмотра сценария */}
-      {viewingScenario && (
-        <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
+      {/* Модалка просмотра сценария — портал в body с z-40, чтобы поверх неё рендерилась модалка удаления (z-[9999]) */}
+      {viewingScenario && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-40 bg-dark-bg overflow-y-auto">
           <div className="sticky top-0 z-10 flex items-center justify-between gap-4 p-4 bg-dark-bg border-b border-dark backdrop-blur-sm">
             <h3 className="text-lg font-semibold text-light truncate">
               {viewingScenario.targetActionTitle ?? 'Сценарий'}
@@ -132,7 +133,7 @@ export default function ActiveScenarios({ onStartAnalysis, onShowAllScenarios }:
               <button
                 type="button"
                 onClick={() => setDeleteConfirmId(viewingScenario.id)}
-                className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 border border-red-500/40 rounded-lg transition-colors"
+                className="px-3 py-2.5 text-sm text-red-400 hover:text-red-300 border border-red-500/40 rounded-lg transition-colors"
               >
                 Удалить
               </button>
@@ -161,17 +162,18 @@ export default function ActiveScenarios({ onStartAnalysis, onShowAllScenarios }:
               <DossierLikeContent content={viewingScenario.content} />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Подтверждение удаления */}
-      {deleteConfirmId && (() => {
+      {/* Подтверждение удаления — рендер в body, чтобы не перекрывалось контентом app-shell */}
+      {deleteConfirmId && typeof document !== 'undefined' && (() => {
         const scenario = getById(deleteConfirmId)
         const profile = scenario ? getProfile(scenario.profileId) : null
         const name = profile?.name ?? 'сценарий'
-        return (
+        const modal = (
           <div
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70"
+            className="fixed inset-0 z-modal-overlay flex items-center justify-center p-4 bg-black-80"
             onClick={() => setDeleteConfirmId(null)}
             role="dialog"
             aria-modal="true"
@@ -189,14 +191,14 @@ export default function ActiveScenarios({ onStartAnalysis, onShowAllScenarios }:
                 <button
                   type="button"
                   onClick={() => setDeleteConfirmId(null)}
-                  className="flex-1 py-2.5 rounded-lg text-gray-400 hover:text-light border border-dark hover:border-dark-hover transition-colors font-medium"
+                  className="flex-1 py-3 rounded-lg text-gray-400 hover:text-light border border-dark hover:border-dark-hover transition-colors font-medium"
                 >
                   Отменить
                 </button>
                 <button
                   type="button"
                   onClick={() => deleteConfirmId && handleDelete(deleteConfirmId)}
-                  className="flex-1 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
+                  className="flex-1 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
                 >
                   Удалить
                 </button>
@@ -204,6 +206,7 @@ export default function ActiveScenarios({ onStartAnalysis, onShowAllScenarios }:
             </div>
           </div>
         )
+        return createPortal(modal, document.body)
       })()}
     </section>
   )
