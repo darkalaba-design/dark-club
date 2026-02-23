@@ -8,6 +8,13 @@
 # testing
 /coverage
 
+# Локальная документация
+docs/
+manifest.md
+.cursorrules
+tests/prompts/
+tests/checklist/
+
 # next.js
 /.next/
 /out/

@@ -1810,38 +1810,278 @@ function ShadowSelectModal({
   onClose: () => void
   onToggle: (id: string) => void
 }) {
+  const viewportRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [viewportWidthPx, setViewportWidthPx] = useState(0)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wheelSnapRestoreRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const dragStartX = useRef(0)
+  const dragStartScrollLeft = useRef(0)
+
+  useLayoutEffect(() => {
+    const el = viewportRef.current
+    if (!el) return
+    const update = () => setViewportWidthPx(el.clientWidth)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const cardWidthPx =
+    viewportWidthPx > 0
+      ? viewportWidthPx
+      : typeof window !== 'undefined'
+        ? window.innerWidth
+        : 320
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    if (!el || cardWidthPx <= 0) return
+    const onScrollEnd = () => {
+      const index = Math.round(el.scrollLeft / cardWidthPx)
+      setActiveIndex(Math.min(index, shadows.length - 1))
+    }
+    el.addEventListener('scrollend', onScrollEnd)
+    return () => el.removeEventListener('scrollend', onScrollEnd)
+  }, [cardWidthPx])
+
+  const handleScroll = useCallback(() => {
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+    scrollTimeoutRef.current = setTimeout(() => {
+      const el = scrollRef.current
+      if (!el || cardWidthPx <= 0) return
+      const index = Math.round(el.scrollLeft / cardWidthPx)
+      setActiveIndex(Math.min(index, shadows.length - 1))
+      scrollTimeoutRef.current = null
+    }, 50)
+  }, [cardWidthPx])
+
+  const goToIndex = useCallback(
+    (index: number) => {
+      const el = scrollRef.current
+      if (!el) return
+      const i = Math.max(0, Math.min(index, shadows.length - 1))
+      el.scrollTo({ left: i * cardWidthPx, behavior: 'smooth' })
+      setActiveIndex(i)
+    },
+    [cardWidthPx]
+  )
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    if (el) el.style.scrollSnapType = 'x mandatory'
+
+    // Убрали обработчик wheel для горизонтальной прокрутки
+    // Теперь колесо мыши работает только для вертикальной прокрутки внутри карточек
+
+    const onMouseDown = (e: MouseEvent) => {
+      const el = scrollRef.current
+      if (!el) return
+      const inside = el.contains(e.target as Node)
+      if (!inside) return
+      if ((e.target as HTMLElement).closest('button')) return
+      e.preventDefault()
+      e.stopPropagation()
+      el.style.scrollSnapType = 'none'
+      dragStartX.current = e.clientX
+      dragStartScrollLeft.current = el.scrollLeft
+      setIsDragging(true)
+      const onMouseMove = (moveEvent: MouseEvent) => {
+        const dx = dragStartX.current - moveEvent.clientX
+        const next = dragStartScrollLeft.current + dx
+        const el2 = scrollRef.current
+        if (el2) {
+          el2.scrollLeft = Math.max(0, Math.min(next, el2.scrollWidth - el2.clientWidth))
+        }
+      }
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove)
+        document.removeEventListener('mouseup', onMouseUp)
+        document.body.style.removeProperty('cursor')
+        document.body.style.removeProperty('user-select')
+        setIsDragging(false)
+        const el2 = scrollRef.current
+        if (el2) {
+          const cardW = el2.clientWidth
+          const index = Math.round(el2.scrollLeft / cardW)
+          const maxIndex = Math.max(0, shadows.length - 1)
+          const snappedIndex = Math.max(0, Math.min(index, maxIndex))
+          const snappedLeft = snappedIndex * cardW
+          el2.style.scrollSnapType = 'x mandatory'
+          el2.scrollTo({ left: snappedLeft, behavior: 'smooth' })
+        }
+      }
+      document.body.style.cursor = 'grabbing'
+      document.body.style.userSelect = 'none'
+      document.addEventListener('mousemove', onMouseMove)
+      document.addEventListener('mouseup', onMouseUp)
+    }
+
+    // Убрали обработчик wheel для горизонтальной прокрутки - теперь только вертикальная прокрутка на карточках
+    document.addEventListener('mousedown', onMouseDown, { capture: true })
+    return () => {
+      if (wheelSnapRestoreRef.current) clearTimeout(wheelSnapRestoreRef.current)
+      document.removeEventListener('mousedown', onMouseDown, { capture: true })
+    }
+  }, [])
+
+  const currentShadow = shadows[activeIndex]
+  const currentSelected = currentShadow ? selectedIds.includes(currentShadow.id) : false
+
   return (
-    <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-dark-bg flex flex-col overflow-hidden">
+      <style>{`.complex-carousel::-webkit-scrollbar { display: none }`}</style>
       <button
         type="button"
         onClick={onClose}
-        className="fixed top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover-text-light hover-border-dark-hover transition-colors"
+        className="fixed top-4 right-4 z-[60] w-10 h-10 flex items-center justify-center rounded-lg bg-dark-card border border-dark text-gray-400 hover:text-light hover:border-dark-hover transition-colors"
         aria-label="Закрыть"
       >
         <span className="text-xl leading-none" aria-hidden>×</span>
       </button>
-      <div className="p-6 pt-16">
-        <h2 className="text-xl font-semibold text-light mb-4">Добавить теневой аспект</h2>
-        <div className="grid grid-cols-1 gap-3">
-          {shadows.map(s => {
-            const selected = selectedIds.includes(s.id)
+      <div className="flex-none px-4 pt-2 pb-2" style={{ paddingTop: 8, paddingBottom: 8 }}>
+        <div className="flex items-center justify-between gap-4" style={{ paddingRight: 52 }}>
+          <div>
+            <h2 className="text-xl font-semibold text-light">Выбор теневого аспекта</h2>
+            <p className="text-sm text-gray-400 mt-1">Свайпайте влево-вправо, как в сторис</p>
+          </div>
+          <span className="text-sm text-gray-500 shrink-0" aria-live="polite">
+            {activeIndex + 1} / {shadows.length}
+          </span>
+        </div>
+      </div>
+      <div
+        ref={viewportRef}
+        className="flex-1 min-h-0 overflow-hidden px-0 flex flex-col"
+      >
+        <div
+          ref={scrollRef}
+          role="region"
+          aria-label="Карусель теневых аспектов"
+          className={`complex-carousel flex flex-1 min-h-0 overflow-x-auto overflow-y-hidden snap-x snap-mandatory overscroll-x-contain ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          style={{
+            width: '100%',
+            minHeight: 0,
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-x'
+          }}
+          onScroll={handleScroll}
+        >
+          {shadows.map((s) => {
             return (
-              <button
+              <div
                 key={s.id}
-                type="button"
-                onClick={() => onToggle(s.id)}
-                className={`text-left p-4 rounded-lg border flex items-center gap-3 transition-colors ${selected ? 'border-blue-500 bg-blue-500-20' : 'border-dark bg-dark-bg hover-bg-dark-hover'}`}
+                data-shadow-card
+                className="flex-shrink-0 w-full h-full max-h-full rounded-none border-x border-dark bg-dark-card overflow-hidden flex flex-col snap-start snap-always"
+                style={{
+                  width: cardWidthPx,
+                  minWidth: cardWidthPx,
+                  scrollSnapAlign: 'start',
+                  scrollSnapStop: 'always'
+                }}
               >
-                <span className="text-2xl">{s.icon}</span>
-                <div className="flex-1 min-w-0 flex flex-col gap-1">
-                  <h4 className="text-base font-medium text-light">{s.title}</h4>
-                  <p className="text-xs text-gray-400 truncate">{s.description}</p>
+                <div className="p-5 flex flex-col gap-3 flex-1 min-w-0 min-h-0 break-words overflow-y-auto overflow-x-hidden">
+                  <div className="flex items-start gap-3">
+                    <span className="text-4xl flex-shrink-0">{s.icon}</span>
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <h3 className="text-lg font-semibold text-light leading-tight break-words">{s.title}</h3>
+                      <p className="text-sm text-gray-400 mt-1 break-words">{s.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-3 min-w-0">
+                    <div className="complex-manifestations-plaque p-4 flex flex-col gap-2 min-w-0">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Признаки</p>
+                      <ul className="text-sm text-gray-300 space-y-0.5 list-disc list-inside break-words">
+                        {s.signs.map((sign, i) => (
+                          <li key={i} className="break-words">{sign}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="complex-howtouse-block p-4 flex flex-col gap-2 min-w-0">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Как работать</p>
+                      <p className="text-sm text-gray-300 break-words leading-relaxed">{s.howToWork}</p>
+                    </div>
+                    {s.howItForms && (
+                      <div className="complex-howtouse-block p-4 flex flex-col gap-2 min-w-0">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Как формируется</p>
+                        <p className="text-sm text-gray-300 break-words leading-relaxed">{s.howItForms}</p>
+                      </div>
+                    )}
+                    {s.inRelationships && (
+                      <div className="complex-howtouse-block p-4 flex flex-col gap-2 min-w-0">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">В отношениях</p>
+                        <p className="text-sm text-gray-300 break-words leading-relaxed">{s.inRelationships}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {selected && <span className="text-green-400">✓</span>}
-              </button>
+              </div>
             )
           })}
         </div>
+      </div>
+      {/* Листалка и кнопка приклеены к нижнему краю */}
+      <div className="flex-none flex flex-col gap-3 py-3 px-4 pb-6 bg-dark-bg border-t border-dark">
+        {(() => {
+          const total = shadows.length
+          const windowSize = 5
+          const start =
+            total <= windowSize
+              ? 0
+              : Math.max(0, Math.min(activeIndex - 2, total - windowSize))
+          const indices =
+            total <= windowSize
+              ? Array.from({ length: total }, (_, i) => i)
+              : Array.from({ length: windowSize }, (_, i) => start + i)
+          return (
+            <div className="flex justify-center gap-2">
+              {indices.map(index => {
+                const distance = Math.abs(index - activeIndex)
+                const isActive = index === activeIndex
+                const width = distance === 0 ? 16 : distance === 1 ? 10 : 6
+                const height = distance === 0 ? 6 : distance === 1 ? 6 : 6
+                const backgroundColor = isActive
+                  ? '#3b82f6'
+                  : distance === 1
+                    ? '#6b7280'
+                    : 'rgba(107, 114, 128, 0.5)'
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => goToIndex(index)}
+                    className="shrink-0 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    aria-label={`Теневой аспект ${index + 1} из ${total}`}
+                    aria-current={isActive ? 'true' : undefined}
+                  >
+                    <span
+                      className="block rounded-full transition-all duration-200"
+                      style={{
+                        width: `${width}px`,
+                        height: `${height}px`,
+                        backgroundColor
+                      }}
+                    />
+                  </button>
+                )
+              })}
+            </div>
+          )
+        })()}
+        {currentShadow && (
+          <button
+            type="button"
+            onClick={() => onToggle(currentShadow.id)}
+            className={`w-full py-3 px-4 rounded-lg text-sm font-medium transition-colors ${currentSelected ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40' : 'bg-dark-bg text-gray-300 border border-dark hover:bg-dark-hover'}`}
+          >
+            {currentSelected ? '✓ В профиле' : 'Добавить в профиль'}
+          </button>
+        )}
       </div>
     </div>
   )

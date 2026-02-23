@@ -146,7 +146,7 @@ export default function ActiveScenarios({ onStartAnalysis, onShowAllScenarios }:
               </button>
             </div>
           </div>
-          <div className="max-w-3xl mx-auto p-4 pb-8">
+          <div className="max-w-3xl mx-auto pt-4 pb-8">
             <p className="text-sm text-gray-500 mb-4">
               {viewingScenario.manipulatorRoleTitle && <span>{viewingScenario.manipulatorRoleTitle} · </span>}
               {new Date(viewingScenario.createdAt).toLocaleDateString('ru-RU', {
@@ -157,7 +157,7 @@ export default function ActiveScenarios({ onStartAnalysis, onShowAllScenarios }:
                 minute: '2-digit'
               })}
             </p>
-            <div className="bg-dark-card border border-dark rounded-xl p-6">
+            <div className="bg-dark-card border border-dark rounded-xl p-6 w-fit">
               <DossierLikeContent content={viewingScenario.content} />
             </div>
           </div>

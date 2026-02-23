@@ -11,7 +11,7 @@ interface WelcomeScreenProps {
 
 export default function WelcomeScreen({ onStart, onShowAllScenarios }: WelcomeScreenProps) {
   return (
-    <div className="flex flex-col items-center w-full max-w-[800px] mx-auto px-4 pb-8 pt-6">
+    <div className="flex flex-col items-center w-full max-w-[800px] mx-auto pb-8 pt-6">
       {/* Блок 1: Совет дня */}
       <div className="w-full mb-8">
         <DailyTip />

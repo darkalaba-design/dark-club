@@ -87,13 +87,6 @@ export default function App() {
     prevStep()
   }
 
-  const canProceed = () => {
-    if (state.currentStep === 1) return state.manipulatorRole !== null
-    if (state.currentStep === 2) return state.victimRole !== null
-    if (state.currentStep === 3) return state.targetAction !== null
-    return false
-  }
-
   const handleVictimSelect = (roleId: string) => {
     setSelectedProfileId(null)
     setVictimRole(roleId)
